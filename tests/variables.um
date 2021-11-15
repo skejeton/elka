@@ -1,0 +1,6 @@
+fn main() {
+    x := "Mr. Kill"
+    y := "Mr. Cool"
+    print(x)
+    print(y)
+}

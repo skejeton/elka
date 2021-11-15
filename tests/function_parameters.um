@@ -1,0 +1,16 @@
+fn print_twice(x: int) {
+    printi(x)
+    printi(x)
+}
+
+fn print_twice_str(x: str) {
+    print(x)
+    print(x)
+}
+
+fn main() {
+    print_twice(424)
+    print_twice_str("Hello")
+}
+
+

@@ -1,0 +1,7 @@
+fn other_function() {
+    print("I am another function!")
+}
+
+fn main() {
+    other_function()
+}

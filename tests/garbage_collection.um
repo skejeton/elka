@@ -1,0 +1,10 @@
+fn function() {
+    x := "B"
+}
+
+fn main() {
+    x := "A"
+    print(x)
+    function()
+    print(x)
+}
