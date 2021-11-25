@@ -13,12 +13,11 @@ typedef struct SumkaParserError {
 typedef struct SumkaParser {
     bool eof;
     SumkaLexer *lexer;
-    SumkaFFI *ffi;
     SumkaCodegen cg;
     SumkaToken current_;
     char tmpstrbuf_[1024];
-    enum SumkaTypeKind last_type;
-    enum SumkaTypeKind return_type;
+    SumkaReflItem *last_type;
+    SumkaReflItem *return_type;
     SumkaParserError err;
 } SumkaParser;
 
