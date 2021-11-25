@@ -13,12 +13,14 @@ typedef struct SumkaFFIMapping {
 } SumkaFFIMapping;
 
 typedef struct SumkaFFI {
-    // TODO: Get rid of static buffer
+    // FIXME: Get rid of static buffer
     SumkaFFIMapping mappings[1024];
     size_t mapping_count; 
 } SumkaFFI;
 
-// Please, only pass the string literals to name
+// NOTE: Please, only pass the string literals to name
 void sumka_ffi_register(SumkaFFI *ffi, const char *name, SumkaFFIExec exec);
+
+int sumka_ffi_find(SumkaFFI *ffi, const char *name);
 
 #endif

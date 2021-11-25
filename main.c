@@ -18,11 +18,16 @@ char* read_file(const char *path) {
 }
 
 void print(SumkaRuntime *rt) {
-    printf("%s\n", sumka_runtime_pop_str(rt)); 
+    printf("%s", sumka_runtime_pop_str(rt)); 
 }
 
 void printi(SumkaRuntime *rt) {
-    printf("%zi\n", sumka_runtime_pop_int(rt)); 
+    printf("%zi", sumka_runtime_pop_int(rt)); 
+}
+
+void println(SumkaRuntime *rt) {
+    (void) rt;
+    printf("\n"); 
 }
 
 int main() {
@@ -33,6 +38,7 @@ int main() {
     SumkaFFI ffi = { 0 };
     sumka_ffi_register(&ffi, "print", print);
     sumka_ffi_register(&ffi, "printi", printi);
+    sumka_ffi_register(&ffi, "println", println);
     
     SumkaParser parser = { .lexer = &lexer, .ffi = &ffi };
     /*
@@ -47,15 +53,19 @@ int main() {
         return -1;
     }
     */
+    
     SumkaError err = sumka_parser_parse(&parser);
-    if (err && err != SUMKA_ERR_EOF) {
-        printf("Error number %d, %d:%d\n", err, parser.current_.line+1, parser.current_.column+1);
+    sumka_refl_trace(&parser.cg.refl);
+    if (err) {
+        sumka_refl_dispose(&parser.cg.refl);
+        //sumka_parser_print_error(&parser, err);
+        free(source);
         return -1;
     }
 
     printf(" == Bytecode == \n");
-
     sumka_codegen_dbgdmp(&parser.cg);
+
     printf(" == Execution == \n");
     SumkaRuntime runtime = { .cg = &parser.cg, .ffi = &ffi };
 

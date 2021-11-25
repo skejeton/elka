@@ -1,0 +1,4 @@
+This currently has some problems:
+    Parser manually parses built-in types (bad)
+    Error messages are pretty much non-existent
+    Some other things, look for todos and fixme's

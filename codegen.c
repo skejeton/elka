@@ -11,12 +11,6 @@ char* my_strdup(char *name) {
     return b;
 }
 
-SumkaLabel* sumka_codegen_label(SumkaCodegen *cg, char *name) {
-    cg->labels[cg->label_count].name = my_strdup(name);
-    cg->labels[cg->label_count].at = cg->instr_count;
-    return &cg->labels[cg->label_count++];
-}
-
 void sumka_codegen_instr_ic(SumkaCodegen *cg, SumkaInstruction instr, sumka_default_int_td icarg) {
     memcpy(cg->lut + cg->lut_trail, &icarg, sizeof(icarg));   
     cg->lut_indices[cg->lut_index_count] = cg->lut_trail;
@@ -58,11 +52,12 @@ const char *INSTR_MNEM[] = {
     [SUMKA_INSTR_LOAD_IUC]     = "load",
     [SUMKA_INSTR_CALL_SC]      = "call-sc",
     [SUMKA_INSTR_CALL_FFI_IUC] = "call-ffi",
+    [SUMKA_INSTR_CLR]          = "clr",
     [SUMKA_INSTR_RETN]         = "retn",
 };
 
 void sumka_codegen_dbgdmp(SumkaCodegen *cg) {
-    size_t lbl_index = 0;
+ //   size_t lbl_index = 0;
     
     // XXX: remove this?
     /*for (size_t i = 0; i < sizeof(cg->lut);) {
@@ -73,14 +68,14 @@ void sumka_codegen_dbgdmp(SumkaCodegen *cg) {
     }*/
 
     for (size_t i = 0; i < cg->instr_count; i += 1) {
-        while (lbl_index < cg->label_count && cg->labels[lbl_index].at <= i) {
-            printf("\x1b[33m%s\x1b[0m:\n", cg->labels[lbl_index++].name);
+        for (size_t j = 0; j < cg->refl.refl_count; j += 1) {
+            if (cg->refl.refls[j].type == SUMKA_TYPE_FUN && cg->refl.refls[j].fn.addr == i && cg->refl.refls[j].present) {
+                printf("\x1b[33m%s\x1b[0m:\n", cg->refl.refls[j].name);
+            }
         }
         
         uint32_t instr = cg->instrs[i];
-        // 0x3F = 6 bit mask
-        // TODO: this should probably be constant declared somewhere
-        printf("    \x1b[31m%s\x1b[0m", INSTR_MNEM[instr & 0x3F]);
+        printf("    \x1b[31m%s\x1b[0m", INSTR_MNEM[SUMKA_INSTR_ID(instr)]);
         switch (instr & 0x3F) {
             case SUMKA_INSTR_CALL_SC:
             case SUMKA_INSTR_PUSH_SC:
@@ -93,13 +88,13 @@ void sumka_codegen_dbgdmp(SumkaCodegen *cg) {
                 break;
             case SUMKA_INSTR_PUSH_IC:
                 printf(" \x1b[34m%li\x1b[0m", *(sumka_default_int_td*)&cg->lut[cg->lut_indices[instr >> 6]]);
+                break;
         }
         printf("\n");
     }
 }
 
 void sumka_codegen_dispose(SumkaCodegen *cg) {
-    for (size_t i = 0; i < cg->label_count; i += 1)
-        free(cg->labels[i].name);
+    sumka_refl_dispose(&cg->refl);
 }
 

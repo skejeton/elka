@@ -8,12 +8,14 @@
  */
 static
 size_t find_label(SumkaRuntime *rt, char *name) {
-    for (size_t i = 0; i < rt->cg->label_count; i += 1) {
-        if (strcmp(rt->cg->labels[i].name, name) == 0)
-            return rt->cg->labels[i].at;
-    }
+    int id = sumka_refl_find(&rt->cg->refl, name);
     
-    fprintf(stdout, "\"%s\"() not found!\n", name);
+    if (id == -1 || !rt->cg->refl.refls[id].present)
+        goto error;
+
+    return rt->cg->refl.refls[id].fn.addr;
+error:
+    fprintf(stdout, "%s() not found!\n", name);
     exit(12);
 }
 
@@ -28,32 +30,14 @@ sumka_default_int_td lup_ic(SumkaRuntime *rt, uint32_t instr) {
     return *(sumka_default_int_td*)&rt->cg->lut[rt->cg->lut_indices[instr>>6]];
 }
 
-// Looks up string lut offset
-/*
-static
-size_t lup_sc_addr(SumkaRuntime *rt, uint32_t instr) {
-    return rt->cg->lut_indices[instr>>6];
-}*/
-
-/* FIXME: 1 << 14, is very assuming here
- */
 static inline
-void push_sizet(SumkaRuntime *rt, size_t val) {
-    if (rt->rsp >= ((1 << 14) - sizeof(size_t))) {
+void push_call(SumkaRuntime *rt, size_t val) {
+    if (rt->rsp >= (1 << 14)) {
         printf("Stack overflow!\n");
         exit(-1);
     }
-    *((size_t*)(rt->stack+rt->rsp)) = val;    
-    rt->rsp += sizeof(val);
+    rt->callstack[rt->rsp++] = val;    
 }
-
-/*
-static inline
-size_t pop_sizet(SumkaRuntime *rt) {
-    return *((size_t*)(rt->stack+rt->rsp-sizeof(size_t)));
-    rt->rsp -= sizeof(size_t);
-}
-*/
 
 char* sumka_runtime_pop_str(SumkaRuntime *rt) {
     return (char*)sumka_alloc_get(&rt->alloc, sumka_stackref_pop(&rt->alloc));
@@ -64,11 +48,9 @@ sumka_default_int_td sumka_runtime_pop_int(SumkaRuntime *rt) {
 }
 
 void sumka_runtime_exec(SumkaRuntime *rt) {
-    /* FIXME: 1 << 14 bytes... isn't ought to be enough for anybody
-     */
-    rt->stack = malloc(1 << 14);
-    // SETUP
+    rt->callstack = malloc(sizeof(size_t)*(1 << 14));
     rt->rip = find_label(rt, "main");
+
 
 
     printf("(sumka) found main at %zu\n", rt->rip);
@@ -79,19 +61,11 @@ void sumka_runtime_exec(SumkaRuntime *rt) {
          */
         sumka_gc_sweep(&rt->alloc);
 
-        /* TODO: 0x3F = 6 bit mask, this should probably
-        *        be a constant declared somewhere
-        */     
-        SumkaInstruction kind = instr & 0x3F;
+        SumkaInstruction kind = SUMKA_INSTR_ID(instr);
         switch (kind) {
             case SUMKA_INSTR_CALL_IUC: {
-                /* XXX: Do we really need this?
-                 */
                 sumka_gc_frame(&rt->alloc);
-                push_sizet(rt, rt->rsp);
-                push_sizet(rt, rt->rbp);
-                push_sizet(rt, rt->rip);
-                rt->rbp = rt->rsp;
+                push_call(rt, rt->rip);
                 rt->rip = instr >> 6;
             } break;
             case SUMKA_INSTR_CALL_FFI_IUC: {
@@ -118,18 +92,19 @@ void sumka_runtime_exec(SumkaRuntime *rt) {
                 sumka_stackref_push(&rt->alloc, sumka_gc_alloc_int(&rt->alloc, val));
                 rt->rip += 1;  
             } break;
-            case SUMKA_INSTR_RETN: {
+            case SUMKA_INSTR_CLR: {
                 sumka_gc_retract(&rt->alloc);
-                if (rt->rbp == 0)
+                rt->rip += 1;
+            } break;
+            case SUMKA_INSTR_RETN: {
+                if (rt->rsp == 0)
                     goto cleanup;
-                size_t rbp = rt->rbp;
-                rt->rip = *(size_t*)(rt->stack+rbp-sizeof(size_t))+1;
-                rt->rbp = *(size_t*)(rt->stack+rbp-sizeof(size_t)*2);
-                rt->rsp = *(size_t*)(rt->stack+rbp-sizeof(size_t)*3);
+
+                rt->rip = rt->callstack[--rt->rsp]+1;
             } break;
         }
     }
 cleanup:
     sumka_gc_sweep(&rt->alloc);
-    free(rt->stack);
+    free(rt->callstack);
 }

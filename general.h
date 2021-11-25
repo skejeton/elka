@@ -2,13 +2,20 @@
 #define SUMKA_GENERAL_H__
 
 typedef enum {
-    SUMKA_OK,
-    SUMKA_ERR_PLACEHOLDER,
-    SUMKA_ERR_EOF,
-    SUMKA_ERR_INVALID_TOKEN,
-    SUMKA_ERR_INVALID_CHARACTER,
-    SUMKA_ERR_NUMBER_OUT_OF_RANGE,
-    SUMKA_ERR_UNKNOWN_TYPE
+    SUMKA_OK,                       // 0
+    SUMKA_ERR_PLACEHOLDER,          // 1
+    SUMKA_ERR_VARIABLE_NOT_FOUND,   // 2
+    SUMKA_ERR_FUNCTION_NOT_FOUND,   // 3
+    SUMKA_ERR_TYPE_MISMATCH,        // 4
+    SUMKA_ERR_EOF,                  // 5
+    SUMKA_ERR_INVALID_TOKEN,        // 6
+    SUMKA_ERR_INVALID_CHARACTER,    // 7 
+    SUMKA_ERR_NUMBER_OUT_OF_RANGE,  // 8
+    SUMKA_ERR_UNKNOWN_TYPE,         // 9
+    SUMKA_ERR_CALL_ON_NON_FUNCTION, // 10
+    SUMKA_ERR_TOO_MANY_ARGS,        // 11
+    SUMKA_ERR_NOT_ENOUGH_ARGS,      // 12
+    SUMKA_ERR_DOUBLE_FORWARD_DECL   // 13
 } __attribute__((warn_unused_result)) SumkaError;
 
 #endif

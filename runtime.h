@@ -5,15 +5,13 @@
 #include "ffi.h"
 
 typedef struct SumkaRuntime {
-    // TODO: I should probably pass it by value
     SumkaCodegen *cg;
     SumkaFFI *ffi;
     SumkaAlloc alloc;
-    uint8_t *stack;
+    size_t *callstack;
     
     // Registers
     size_t rsp;
-    size_t rbp;
     size_t rip;
 } SumkaRuntime; 
 

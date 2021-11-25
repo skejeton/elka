@@ -1,7 +1,7 @@
 #ifndef SUMKA_CODEGEN_H__
 #define SUMKA_CODEGEN_H__
 #include <stddef.h>
-#include "typesystem.h"
+#include "refl.h"
 #include <stdint.h>
 
 /*
@@ -17,6 +17,9 @@
  * IUC = Inline uint Constant
  * IC  = Integer constant (LUT)
  */
+ 
+#define SUMKA_INSTR_ID(x) ((SumkaInstruction)(x & 0x3F))
+#define SUMKA_IUC_ARG1(x) ((size_t)( x >> 6 ))
 
 typedef int64_t sumka_default_int_td;
 
@@ -31,7 +34,10 @@ typedef enum SumkaInstruction {
     SUMKA_INSTR_LOAD_IUC     = 5,
     SUMKA_INSTR_CALL_IUC     = 6,
     SUMKA_INSTR_RETN         = 7,
-    SUMKA_INSTR_CALL_FFI_IUC = 8
+
+    // Clears the stack frame of current function
+    SUMKA_INSTR_CLR          = 8,
+    SUMKA_INSTR_CALL_FFI_IUC = 9
 } SumkaInstruction;
 
 typedef struct SumkaCodegen {
@@ -45,21 +51,12 @@ typedef struct SumkaCodegen {
     
     // The instructions are fixed 32 bit
     uint32_t instrs[1024];
-    struct SumkaLabel {
-        char *name;
-        size_t at;
-        // FIXME: This is just ridiculous, make reflection
-        bool has_arg;
-        SumkaType type;
-    } labels[1024];
     size_t instr_count;
-    size_t label_count;
+
+    SumkaRefl refl;
 } SumkaCodegen;
 
 typedef struct SumkaLabel SumkaLabel;
-
-// Puts label at current code state
-SumkaLabel* sumka_codegen_label(SumkaCodegen *cg, char *name);
 
 // Puts SC-Addressed instruction into the instruction list
 void sumka_codegen_instr_sc(SumkaCodegen *cg, SumkaInstruction instr, char *scarg);

@@ -3,19 +3,12 @@
 #include "lexer.h"
 #include "codegen.h"
 #include "ffi.h"
-#include "typesystem.h"
 #include <stdbool.h>
 
-typedef struct SumkaLookupSlot {
-    char *name;
-    SumkaType type;
-} SumkaLookupSlot;
-
-// Slot for variable lookup
-typedef struct SumkaLookup {
-    SumkaLookupSlot slots[1024];
-    size_t slot_count;
-} SumkaLookup;
+typedef struct SumkaParserError {
+    // FIXME: For now we're just gonna store text, yeah
+    char txt[1024];
+} SumkaParserError;
 
 typedef struct SumkaParser {
     bool eof;
@@ -24,10 +17,12 @@ typedef struct SumkaParser {
     SumkaCodegen cg;
     SumkaToken current_;
     char tmpstrbuf_[1024];
-    SumkaLookup lookup;
-    SumkaType last_type;
+    enum SumkaTypeKind last_type;
+    enum SumkaTypeKind return_type;
+    SumkaParserError err;
 } SumkaParser;
 
 SumkaError sumka_parser_parse(SumkaParser *parser);
+void sumka_parser_print_error(SumkaParser *parser, SumkaError err);
 
 #endif

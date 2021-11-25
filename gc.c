@@ -33,6 +33,7 @@ SumkaRef sumka_gc_alloc_str(SumkaAlloc *alloc, char *data) {
 
 SumkaRef sumka_gc_alloc_int(SumkaAlloc *alloc, sumka_default_int_td data) {
     SumkaRef ref = get_vacant_ref(alloc);
+    
     // FIXME: Inefficent
     sumka_default_int_td *dest = malloc(sizeof(data));
     *dest = data;

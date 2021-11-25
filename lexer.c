@@ -49,6 +49,11 @@ char lis(SumkaLexer *lexer, char chara) {
 }
 
 static
+char lmeets(SumkaLexer *lexer, const char *str) {
+    return strncmp(str, lexer->source+lexer->pos_, strlen(str)) == 0;
+}
+
+static
 char lnot(SumkaLexer *lexer, char chara) {
     return lexer->source[lexer->pos_] != chara;
 }
@@ -86,6 +91,8 @@ SumkaError ident_or_kw(SumkaLexer *lexer, SumkaToken *out) {
     
     if (verify(lexer, &capture, "fn"))
         *out = mktok(capture, SUMKA_TT_KW_FN);
+    else if (verify(lexer, &capture, "return"))
+        *out = mktok(capture, SUMKA_TT_RETURN);
     else
         *out = mktok(capture, SUMKA_TT_IDENT);
     return SUMKA_OK;
@@ -137,6 +144,8 @@ SumkaError decide(SumkaLexer *lexer, SumkaToken *out) {
         return ident_or_kw(lexer, out);
     if (lis(lexer, '"'))
         return string(lexer, out);
+    if (lis(lexer, ','))
+        return simple(lexer, SUMKA_TT_COMMA, out);
     if (lis(lexer, '('))
         return simple(lexer, SUMKA_TT_LPAREN, out);
     if (lis(lexer, ')'))
@@ -171,9 +180,24 @@ SumkaError decide(SumkaLexer *lexer, SumkaToken *out) {
 }
 
 static
+bool skip_comment(SumkaLexer *lexer) {
+    if (lmeets(lexer, "/*")) {
+        lskip(lexer);
+        lskip(lexer);
+        while (!lmeets(lexer, "*/")) {
+            lskip(lexer);
+        }
+        lskip(lexer);
+        lskip(lexer);
+        return true;
+    }
+    return false;
+}
+
+static
 void skip_blank(SumkaLexer *lexer) {
     while (lis(lexer, ' ') || lis(lexer, '\t') ||
-           lis(lexer, '\r') || lis(lexer, '\n'))
+           lis(lexer, '\r') || lis(lexer, '\n') || skip_comment(lexer))
     {
         lskip(lexer);
     }
