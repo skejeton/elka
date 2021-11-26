@@ -41,6 +41,9 @@ typedef enum SumkaInstruction {
 } SumkaInstruction;
 
 typedef struct SumkaCodegen {
+    // I might remove the reflection here
+    SumkaRefl *refl;
+    
     // Constant lookup table
     uint8_t lut[1 << 14];
     size_t lut_trail;
@@ -52,8 +55,6 @@ typedef struct SumkaCodegen {
     // The instructions are fixed 32 bit
     uint32_t instrs[1024];
     size_t instr_count;
-
-    SumkaRefl refl;
 } SumkaCodegen;
 
 typedef struct SumkaLabel SumkaLabel;

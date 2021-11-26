@@ -8,14 +8,19 @@
  */
 static
 size_t find_label(SumkaRuntime *rt, char *name) {
-    int id = sumka_refl_find(&rt->cg->refl, name);
+    SumkaReflItem *item = sumka_refl_lup(rt->cg->refl, name);
     
-    if (id == -1 || !rt->cg->refl.refls[id].present)
+    if (!item && !item->present)
         goto error;
-
-    return rt->cg->refl.refls[id].fn.addr;
+    if (item->tag != SUMKA_TAG_FUN)
+        goto error2;
+    
+    return item->fn.addr;
 error:
     fprintf(stdout, "%s() not found!\n", name);
+    exit(12);
+error2:
+    fprintf(stdout, "%s() is not a function!\n", name);
     exit(12);
 }
 
@@ -69,7 +74,7 @@ void sumka_runtime_exec(SumkaRuntime *rt) {
                 rt->rip = instr >> 6;
             } break;
             case SUMKA_INSTR_CALL_FFI_IUC: {
-                rt->ffi->mappings[instr >> 6].exec(rt);
+                rt->cg->refl->refls[instr >> 6].ffi_fn(rt);
                 rt->rip += 1;
             } break;
             case SUMKA_INSTR_LOAD_IUC: {

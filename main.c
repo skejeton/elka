@@ -34,13 +34,15 @@ int main() {
     char *source = read_file("playground/main.um");
     SumkaLexer lexer = { .source = source };
     
+    SumkaRefl refl = sumka_refl_new();    
+
+    sumka_refl_register_ffi_fn(&refl, "print", print);
+    sumka_refl_register_ffi_fn(&refl, "printi", printi);
+    sumka_refl_register_ffi_fn(&refl, "println", println);
     
-    SumkaFFI ffi = { 0 };
-    sumka_ffi_register(&ffi, "print", print);
-    sumka_ffi_register(&ffi, "printi", printi);
-    sumka_ffi_register(&ffi, "println", println);
     
-    SumkaParser parser = { .lexer = &lexer, .ffi = &ffi };
+    SumkaParser parser = { .lexer = &lexer, .refl = &refl };
+    parser.cg.refl = &refl;
     /*
     SumkaToken tok;
     SumkaError err;
@@ -55,9 +57,10 @@ int main() {
     */
     
     SumkaError err = sumka_parser_parse(&parser);
-    sumka_refl_trace(&parser.cg.refl);
+    sumka_refl_trace(parser.refl);
     if (err) {
-        sumka_refl_dispose(&parser.cg.refl);
+        sumka_refl_dispose(parser.refl);
+        printf("Error at %d:%d\n", parser.current_.line+1, parser.current_.column+1);
         //sumka_parser_print_error(&parser, err);
         free(source);
         return -1;
@@ -67,9 +70,10 @@ int main() {
     sumka_codegen_dbgdmp(&parser.cg);
 
     printf(" == Execution == \n");
-    SumkaRuntime runtime = { .cg = &parser.cg, .ffi = &ffi };
+    SumkaRuntime runtime = { .cg = &parser.cg };
 
     sumka_runtime_exec(&runtime);
+    sumka_refl_dispose(&refl);
     sumka_codegen_dispose(&parser.cg);
     free(source);
 }

@@ -1,0 +1,15 @@
+fn returning_function(): int {
+    return 42
+}
+
+fn p(string: str): str {
+    print(string)
+    println()
+    return string
+}
+
+fn main() {
+    p(p(p("Hi world")))
+    printi(returning_function())
+    println()
+}

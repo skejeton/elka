@@ -4,62 +4,64 @@
 #include <string.h>
 #include <stdlib.h>
 
-/* Basetype definitions */
-static const SumkaReflItem BASETYPE_REFL[] = {
-    [SUMKA_TYPE_VOID] = {
-        .tag      = SUMKA_TAG_BASETYPE,
-        .name     = "void",
-        .present  = true,
-        .basetype = SUMKA_TYPE_VOID,
-        .sibling  = NULL, 
-    },
-    [SUMKA_TYPE_INT] = {
-        .tag      = SUMKA_TAG_BASETYPE,
-        .name     = "int",
-        .present  = true,
-        .basetype = SUMKA_TYPE_INT,
-        .sibling  = NULL, 
-    },
-    [SUMKA_TYPE_STR] = {
-        .tag      = SUMKA_TAG_BASETYPE,
-        .name     = "str",
-        .present  = true,
-        .basetype = SUMKA_TYPE_STR,
-        .sibling  = NULL, 
-    },
+struct {
+    const char *name;
+    SumkaBasetype basetype;
+} BASETYPE_REFL[] = {
+    [SUMKA_TYPE_VOID] = { "void", SUMKA_TYPE_VOID },
+    [SUMKA_TYPE_INT]  = { "int", SUMKA_TYPE_INT },
+    [SUMKA_TYPE_STR]  = { "str", SUMKA_TYPE_STR },
 };
 
-const SumkaReflItem *sumka_basetype(SumkaReflItemKind kind) {
-    return &BASETYPE_REFL[kind];
+static
+SumkaReflItem generic_item(const char *name, SumkaReflItemKind tag) {
+    return (SumkaReflItem) {
+        // FIXME: Remove strdup here
+        .name = strdup(name),
+        .present = true,
+        .tag = tag
+    };   
+}
+
+void sumka_refl_register_ffi_fn(SumkaRefl *refl, char *name, SumkaFFIExec exec) {
+    SumkaReflItem *item = &refl->refls[refl->refl_count++];
+
+    *item = generic_item(name, SUMKA_TAG_FFIFUN);
+    item->ffi_fn = exec;
+    
+    sumka_refl_push(refl, item);
 }
 
 SumkaReflItem *sumka_refl_make_fn(SumkaRefl *refl, char *name, size_t addr) {
     SumkaReflItem *item = &refl->refls[refl->refl_count++];
 
-    *item = (SumkaReflItem) { 0 };
-
-    item->present = true;
-    // FIXME: Remove strdup here
-    item->name = strdup(name);
+    *item = generic_item(name, SUMKA_TAG_FUN);
     item->fn.addr = addr;
+    
     return item;
 }
 
-// This will find built-in reflection items
-static
-const SumkaReflItem *find_basic(SumkaRefl *refl, const char *name) {
-    for (int i = 0; i < sizeof(BASETYPE_REFL)/sizeof(SumkaReflItem); i += 1) {
-        if (strcmp(BASETYPE_REFL[i].name, name) == 0) {
-            return &BASETYPE_REFL[i];
-        }
-    }
-    return NULL;
+SumkaReflItem *mkbasetype(SumkaRefl *refl, const char *name, SumkaBasetype basetype) {
+    SumkaReflItem *item = &refl->refls[refl->refl_count++];
+    *item = generic_item(name, SUMKA_TAG_BASETYPE);
+    item->basetype = basetype;
+    return item;
 }
 
-const
+SumkaRefl sumka_refl_new() {
+    SumkaRefl result = { 0 };
+    const int count = sizeof(BASETYPE_REFL)/sizeof(BASETYPE_REFL[0]);
+    // NOTE: This will copy the basetype definitions
+    //       This is necessary because they are const
+    //       But refl_find/lup require non-const to be returned     
+    for (int i = 0; i < count; i += 1) {
+        SumkaReflItem *item = mkbasetype(&result, BASETYPE_REFL[i].name, BASETYPE_REFL[i].basetype);
+        sumka_refl_push(&result, item);
+    }    
+    return result;
+}
+
 SumkaReflItem *sumka_refl_find(SumkaRefl *refl, const char *name) {
-    const SumkaReflItem *item = find_basic(refl, name);
-    if (item != NULL) return item;
     for (size_t i = 0; i < refl->refl_count; i += 1) {
         if (strcmp(refl->refls[i].name, name) == 0)
             return &refl->refls[i];
@@ -67,36 +69,37 @@ SumkaReflItem *sumka_refl_find(SumkaRefl *refl, const char *name) {
     return NULL;
 }
 
-const
-SumkaReflItem *sumka_refl_lup(SumkaRefl *refl, const char *name) {
-    const SumkaReflItem *item = find_basic(refl, name);
-    if (item != NULL) return item;
+int sumka_refl_lup_id(SumkaRefl *refl, const char *name) {
     for (int i = refl->stack_size-1; i >= 0; i -= 1) {
         if (strcmp(refl->stack[i]->name, name) == 0)
-            return &refl->refls[i];
+            return i;
     }
-    return NULL;
+    return -1;
 }
 
+SumkaReflItem *sumka_refl_lup(SumkaRefl *refl, const char *name) {
+    int id = sumka_refl_lup_id(refl, name);
+    return id == -1 ? NULL : refl->stack[id];
+}
+
+
 bool sumka_refl_instanceof(SumkaReflItem *a, SumkaReflItem *b) {
+    assert(a != NULL);
     // Note: This only works for now as we don't have type aliases
     // When this will be added we can't just check pointers
-    return b->type == a;
+    return a->type == b;
 }
 
 SumkaReflItem *sumka_refl_make_var(SumkaRefl *refl, char *name, SumkaReflItem *type) {
     SumkaReflItem *item = &refl->refls[refl->refl_count++];
-
-    // FIXME: Remove strdup here
-    item->name = strdup(name);
+    *item = generic_item(name, SUMKA_TAG_VALUE);
     item->type = type;
     return item;
 }
 
-
-
 void sumka_refl_trace(SumkaRefl *refl) {
     const char *types[] = {
+        [SUMKA_TAG_FFIFUN]   = "FFIFunction",
         [SUMKA_TAG_FUN]      = "Function",
         [SUMKA_TAG_VALUE]    = "Value",
         [SUMKA_TAG_BASETYPE] = "Basetype"

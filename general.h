@@ -11,11 +11,12 @@ typedef enum {
     SUMKA_ERR_INVALID_TOKEN,        // 6
     SUMKA_ERR_INVALID_CHARACTER,    // 7 
     SUMKA_ERR_NUMBER_OUT_OF_RANGE,  // 8
-    SUMKA_ERR_UNKNOWN_TYPE,         // 9
-    SUMKA_ERR_CALL_ON_NON_FUNCTION, // 10
-    SUMKA_ERR_TOO_MANY_ARGS,        // 11
-    SUMKA_ERR_NOT_ENOUGH_ARGS,      // 12
-    SUMKA_ERR_DOUBLE_FORWARD_DECL   // 13
+    SUMKA_ERR_INVALID_TYPE,         // 9
+    SUMKA_ERR_TYPE_NOT_FOUND,       // 10
+    SUMKA_ERR_CALL_ON_NON_FUNCTION, // 11
+    SUMKA_ERR_TOO_MANY_ARGS,        // 12
+    SUMKA_ERR_NOT_ENOUGH_ARGS,      // 13
+    SUMKA_ERR_DOUBLE_FORWARD_DECL   // 14
 } __attribute__((warn_unused_result)) SumkaError;
 
 #endif

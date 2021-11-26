@@ -1,0 +1,6 @@
+/* should emit SUMKA_ERR_NOT_ENOUGH_ARGS */
+fn fun(param: int)
+
+fn fun() {
+}
+

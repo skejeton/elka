@@ -3,14 +3,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-char* my_strdup(char *name) {
-    size_t l = strlen(name);
-    char *b = malloc(l+1);
-    memcpy(b, name, l);
-    b[l] = 0;
-    return b;
-}
-
 void sumka_codegen_instr_ic(SumkaCodegen *cg, SumkaInstruction instr, sumka_default_int_td icarg) {
     memcpy(cg->lut + cg->lut_trail, &icarg, sizeof(icarg));   
     cg->lut_indices[cg->lut_index_count] = cg->lut_trail;
@@ -57,20 +49,10 @@ const char *INSTR_MNEM[] = {
 };
 
 void sumka_codegen_dbgdmp(SumkaCodegen *cg) {
- //   size_t lbl_index = 0;
-    
-    // XXX: remove this?
-    /*for (size_t i = 0; i < sizeof(cg->lut);) {
-        if (cg->lut[i] == 0)
-            break;
-        printf("%s\n", (char*)&cg->lut[i]);
-        i += strlen((char*)&cg->lut[i])+1;
-    }*/
-
     for (size_t i = 0; i < cg->instr_count; i += 1) {
-        for (size_t j = 0; j < cg->refl.refl_count; j += 1) {
-            if (cg->refl.refls[j].type == SUMKA_TYPE_FUN && cg->refl.refls[j].fn.addr == i && cg->refl.refls[j].present) {
-                printf("\x1b[33m%s\x1b[0m:\n", cg->refl.refls[j].name);
+        for (size_t j = 0; j < cg->refl->refl_count; j += 1) {
+            if (cg->refl->refls[j].tag == SUMKA_TAG_FUN && cg->refl->refls[j].fn.addr == i && cg->refl->refls[j].present) {
+                printf("\x1b[33m%s\x1b[0m:\n", cg->refl->refls[j].name);
             }
         }
         
@@ -95,6 +77,8 @@ void sumka_codegen_dbgdmp(SumkaCodegen *cg) {
 }
 
 void sumka_codegen_dispose(SumkaCodegen *cg) {
-    sumka_refl_dispose(&cg->refl);
+    // Don't do anything for now,
+    // Although maybe I can free reflection here? Probably a bad idea.
+    (void) cg;
 }
 

@@ -1,0 +1,5 @@
+/* should emit SUMKA_ERR_TYPE_MISMATCH */
+
+fn bad(): int {
+    return "Haha"
+}

@@ -2,11 +2,9 @@
 #define SUMKA_RUNTIME_H__
 #include "codegen.h"
 #include "gc.h"
-#include "ffi.h"
 
 typedef struct SumkaRuntime {
     SumkaCodegen *cg;
-    SumkaFFI *ffi;
     SumkaAlloc alloc;
     size_t *callstack;
     

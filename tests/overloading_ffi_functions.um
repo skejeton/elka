@@ -1,0 +1,10 @@
+fn printi(s: str)
+
+fn main() {
+    printi("Local overloading test")
+}
+
+fn printi(s: str) {
+    print(s)
+}
+

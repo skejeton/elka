@@ -1,0 +1,4 @@
+/* should emit SUMKA_ERR_NUMBER_OUT_OF_RANGE */
+fn main() {
+    printi(133742069133742069133742069)
+}

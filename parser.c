@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <errno.h>
+#include <assert.h>
 
 #define checkout(x) do { SumkaError err; if((err = (x))) { fprintf(stderr, ">>> %d %-20s %s:%d\n", err, __FUNCTION__, __FILE__, __LINE__); return err;} } while (0)
 
@@ -12,13 +13,6 @@ static
 SumkaError pskip(SumkaParser *parser) {
     checkout(sumka_lex_next(parser->lexer, &parser->current_));
     return SUMKA_OK;
-}
-
-static
-bool pcmp(SumkaParser *parser, const char *against) {
-    if (parser->eof)
-        return false;
-    return strncmp(parser->lexer->source+parser->current_.start, against, parser->current_.size) == 0;
 }
 
 static
@@ -35,13 +29,6 @@ bool pifnt(SumkaParser *parser, SumkaTokenType tt) {
         return false;
     return parser->current_.type != tt;
 }
-
-/*
-static
-void message(SumkaParser *parser, const char *message) {
-    strcpy(parser->err.txt, message);
-}
-*/
 
 static
 SumkaError pthen(SumkaParser *parser, SumkaTokenType tt) {
@@ -69,7 +56,6 @@ SumkaError pgive(SumkaParser *parser, SumkaTokenType tt, SumkaToken *token) {
 static
 char* strmk(SumkaParser *parser, SumkaToken *token) {
     memcpy(parser->tmpstrbuf_, parser->lexer->source+token->start, token->size);
-    // Nul terminator
     parser->tmpstrbuf_[token->size] = 0;
     return parser->tmpstrbuf_;
 }
@@ -96,7 +82,9 @@ SumkaError par_value(SumkaParser *parser) {
         checkout(pgive(parser, SUMKA_TT_STRING, &value));
         char *escaped = stresc(parser, &value);
         sumka_codegen_instr_sc(&parser->cg, SUMKA_INSTR_PUSH_SC, escaped);   
-        parser->last_type = SUMKA_TYPE_STR;
+        
+        // NOTE: We must have a basetype find function
+        parser->last_type = sumka_refl_find(parser->refl, "str");
     }
     else if (pif(parser, SUMKA_TT_NUMBER)) {
         SumkaToken value;
@@ -106,7 +94,9 @@ SumkaError par_value(SumkaParser *parser) {
         if (errno == ERANGE) 
             return SUMKA_ERR_NUMBER_OUT_OF_RANGE;
         sumka_codegen_instr_ic(&parser->cg, SUMKA_INSTR_PUSH_IC, num);
-        parser->last_type = SUMKA_TYPE_INT;
+        
+        // NOTE: We must have a basetype find function
+        parser->last_type = sumka_refl_find(parser->refl, "int");
     }
     else if (pif(parser, SUMKA_TT_IDENT)) {
         SumkaToken value;
@@ -116,14 +106,17 @@ SumkaError par_value(SumkaParser *parser) {
             return SUMKA_OK;
         }
 
-        int slot = sumka_refl_lup(&parser->cg.refl, strmk(parser, &value));
-        if (slot == -1)
+        int id = sumka_refl_lup_id(parser->refl, strmk(parser, &value));
+        if (id == -1)
             return SUMKA_ERR_VARIABLE_NOT_FOUND;
-        /* XXX: Here we subtract size from slot, this is for relative addressing
-         * While this might work for now, this isn't guaranteed to be true in future
-         */
-        sumka_codegen_instr_iuc(&parser->cg, SUMKA_INSTR_LOAD_IUC, parser->cg.refl.stack_size-(slot+1));
-        parser->last_type = parser->cg.refl.refls[slot].type;
+        SumkaReflItem *item = parser->refl->stack[id];
+
+        // Calculates the relative offset of the variable
+        // Note, this is also probably temporary
+        int relative = parser->refl->stack_size - (id + 1); 
+
+        sumka_codegen_instr_iuc(&parser->cg, SUMKA_INSTR_LOAD_IUC, relative);
+        parser->last_type = item->type;
     }
 
     return SUMKA_OK;
@@ -131,53 +124,73 @@ SumkaError par_value(SumkaParser *parser) {
 
 static
 SumkaError par_call_params(SumkaParser *parser, SumkaReflItem *item) {
-    if (pif(parser, SUMKA_TT_RPAREN))
-        return SUMKA_OK;
-
     SumkaReflItem *arg = item ? item->fn.first_arg : NULL;
+
     while (pifnt(parser, SUMKA_TT_RPAREN)) {
         if (item && arg == NULL)
             return SUMKA_ERR_TOO_MANY_ARGS;
+
         checkout(par_value(parser));
+        
         // FFI calls provide NULL so we don't typecheck here
         if (item)
-            if (!sumka_refl_typecheck(arg, parser->last_type))
+            if (!sumka_refl_instanceof(arg, parser->last_type))
                 return SUMKA_ERR_TYPE_MISMATCH;
 
         if (pif(parser, SUMKA_TT_RPAREN))
             break;
+            
         if (item)
             arg = arg->sibling;
         checkout(pthen(parser, SUMKA_TT_COMMA));
     }
-    if (item && arg->sibling != NULL)
+    if (arg != NULL)
         return SUMKA_ERR_NOT_ENOUGH_ARGS;   
     return SUMKA_OK;
 }
+
+// NOTE: out_type is guaranteed to be initialized so long the return value
+//       of the function is SUMKA_OK
+static 
+SumkaError par_type(SumkaParser *parser, SumkaReflItem **out_type) {
+    *out_type = NULL;
+
+    SumkaToken type_name;
+    checkout(pgive(parser, SUMKA_TT_IDENT, &type_name));
+    SumkaReflItem *type = sumka_refl_lup(parser->refl, strmk(parser, &type_name));
+    
+    if (!type) 
+        return SUMKA_ERR_TYPE_NOT_FOUND;
+    
+    // For now we are only checking for basetypes, but in the future if we
+    // want to add custom types (like structs) this will be changed
+    if (type->tag != SUMKA_TAG_BASETYPE)
+        return SUMKA_ERR_INVALID_TYPE;
+
+    *out_type = type;
+    return SUMKA_OK;
+}
+
 
 static
 SumkaError par_call(SumkaToken name, SumkaParser *parser) {
     checkout(pthen(parser, SUMKA_TT_LPAREN));    
 
-    int id = sumka_refl_lup(&parser->cg.refl, strmk(parser, &name));
-    if (id != -1) {
-        /* FIXME:
-         * Here I've caught up with a bug that happened because i accessed stuff directly
-         * I should really avoid doing that or it will suck BAD.
-         */
-        SumkaReflItem *item = parser->cg.refl.stack[id];
-        if (item->type != SUMKA_TYPE_FUN)
+    SumkaReflItem *callee = sumka_refl_lup(parser->refl, strmk(parser, &name));
+    
+    if (callee) {
+        if (callee->tag == SUMKA_TAG_FUN) {
+            checkout(par_call_params(parser, callee));  
+            sumka_codegen_instr_sc(&parser->cg, SUMKA_INSTR_CALL_SC, strmk(parser, &name));
+            parser->last_type = callee->type;
+        }
+        else if (callee->tag == SUMKA_TAG_FFIFUN) {
+            checkout(par_call_params(parser, NULL));  
+            sumka_codegen_instr_iuc(&parser->cg, SUMKA_INSTR_CALL_FFI_IUC, callee-parser->refl->refls);
+        }
+        else {
             return SUMKA_ERR_CALL_ON_NON_FUNCTION;
-        
-        checkout(par_call_params(parser, item));  
-        
-        if (item->fn.ret_type)
-            parser->last_type = item->fn.ret_type->type;
-        sumka_codegen_instr_sc(&parser->cg, SUMKA_INSTR_CALL_SC, strmk(parser, &name));
-    }
-    else if ((id = sumka_ffi_find(parser->ffi, strmk(parser, &name))) != -1) {
-        checkout(par_call_params(parser, NULL));    
-        sumka_codegen_instr_iuc(&parser->cg, SUMKA_INSTR_CALL_FFI_IUC, id);
+        }
     }
     else {
         return SUMKA_ERR_FUNCTION_NOT_FOUND;
@@ -187,14 +200,12 @@ SumkaError par_call(SumkaToken name, SumkaParser *parser) {
     return SUMKA_OK;
 }
 
-/* FIXME: Related to the par_value() problem, this should somehow work together
- *        with types
- */
 static
 SumkaError par_defn(SumkaToken name, SumkaParser *parser) {
     checkout(pthen(parser, SUMKA_TT_DEFN));    
     checkout(par_value(parser));
-    sumka_refl_make_var(&parser->cg.refl, strmk(parser, &name), parser->last_type);
+    sumka_refl_push(parser->refl,
+        sumka_refl_make_var(parser->refl, strmk(parser, &name), parser->last_type));
     return SUMKA_OK;
 }
 
@@ -209,6 +220,8 @@ SumkaError decide_statement(SumkaParser *parser) {
             return SUMKA_ERR_TYPE_MISMATCH;
         sumka_codegen_instr(&parser->cg, SUMKA_INSTR_RETN);   
     }
+    // I need to fix this section to parse expressions because
+    // currently it only parses narrow subset (calls)
     else {
         checkout(pgive(parser, SUMKA_TT_IDENT, &name));
 
@@ -217,9 +230,8 @@ SumkaError decide_statement(SumkaParser *parser) {
         else if (pif(parser, SUMKA_TT_DEFN))
             checkout(par_defn(name, parser));
         else
-            /* FIXME: Removing this placeholder
-             */
-            checkout(SUMKA_ERR_PLACEHOLDER);
+            // FIXME: Removing this placeholder
+            return SUMKA_ERR_PLACEHOLDER;
     }
     return SUMKA_OK;
 }
@@ -240,81 +252,66 @@ SumkaError par_fn(SumkaParser *parser) {
     SumkaToken name;
     checkout(pgive(parser, SUMKA_TT_IDENT, &name));
  
-    int decl = sumka_refl_lup(&parser->cg.refl, strmk(parser, &name));
-    // We don't want to provide definitions for non-functions
-    if (decl != -1 && parser->cg.refl.stack[decl]->type != SUMKA_TYPE_FUN)
-        decl = -1;
+    SumkaReflItem *item = sumka_refl_lup(parser->refl, strmk(parser, &name));
+    
+    if (item && item->tag != SUMKA_TAG_FUN)
+        item = NULL;
 
-    SumkaReflItem *item;
-    if (decl == -1)
-        item = sumka_refl_make_fn(&parser->cg.refl, strmk(parser, &name), parser->cg.instr_count);
-    else {
-        // Definition
-        item = parser->cg.refl.stack[decl];
+    // If item isn't null then there was a declaration before
+    // FIXME: This will re-define declarations, unfortunately
+    bool implementation = item != NULL;
+    
+    if (item == NULL)
+        item = sumka_refl_make_fn(parser->refl, strmk(parser, &name), parser->cg.instr_count);
+    else 
+        // Reset address for the definition
         item->fn.addr = parser->cg.instr_count;
-    }
 
-    sumka_refl_push(&parser->cg.refl, item);
-    size_t current_frame = sumka_refl_peek(&parser->cg.refl);
+    sumka_refl_push(parser->refl, item);
+    size_t current_frame = sumka_refl_peek(parser->refl);
     checkout(pthen(parser, SUMKA_TT_LPAREN));
 
     SumkaReflItem *arg = item->fn.first_arg;
 
     while (pifnt(parser, SUMKA_TT_RPAREN)) {
-        if (decl != -1 && arg == NULL)
+        if (implementation && arg == NULL)
             return SUMKA_ERR_TOO_MANY_ARGS;
+
         SumkaToken param_name;
         checkout(pgive(parser, SUMKA_TT_IDENT, &param_name));
         checkout(pthen(parser, SUMKA_TT_COLON));
 
-        enum SumkaTypeKind kind;
+        SumkaReflItem *param_type;
+        checkout(par_type(parser, &param_type));
+        assert(param_type != NULL);
+        SumkaReflItem *param = sumka_refl_make_var(parser->refl, strmk(parser, &param_name), param_type);
+        sumka_refl_push(parser->refl, param);
 
-        if (pcmp(parser, "str"))
-            kind = SUMKA_TYPE_STR;
-        else if (pcmp(parser, "int"))
-            kind = SUMKA_TYPE_INT;
-        else 
-            return SUMKA_ERR_UNKNOWN_TYPE;
-        SumkaReflItem *param = sumka_refl_make_var(&parser->cg.refl, strmk(parser, &param_name), kind);
-        // Register parameter as variable
-        sumka_refl_push(&parser->cg.refl, param);
-        // FIXME: add type checking for forward decl's
-        if (decl == -1)
+        if (!implementation)
             sumka_refl_add_param(item, param);
-        else if (!sumka_refl_typecheck(arg, kind))
+        else if (!sumka_refl_instanceof(arg, param_type))
             return SUMKA_ERR_TYPE_MISMATCH;
         else 
             arg = arg->sibling;
-
-        checkout(pskip(parser));
+        
         if (pif(parser, SUMKA_TT_RPAREN))
             break;
+        
         checkout(pthen(parser, SUMKA_TT_COMMA));
     }
-    if (decl != -1 && arg != NULL)
+    if (implementation && arg != NULL)
         return SUMKA_ERR_NOT_ENOUGH_ARGS;
 
     checkout(pthen(parser, SUMKA_TT_RPAREN));
 
     if (pif(parser, SUMKA_TT_COLON)) {
         checkout(pskip(parser));
-        // Too many duplication when we do typechecking, i must fix that!
-        enum SumkaTypeKind kind;
-        if (pcmp(parser, "str"))
-            kind = SUMKA_TYPE_STR;
-        else if (pcmp(parser, "int"))
-            kind = SUMKA_TYPE_INT;
-        else 
-            return SUMKA_ERR_UNKNOWN_TYPE;
-            
-        item->fn.ret_type = sumka_refl_make_var(&parser->cg.refl, "", kind);
-            
-        parser->return_type = kind;
-        checkout(pskip(parser));
+        checkout(par_type(parser, &item->type)); 
+        parser->return_type = item->type;
     }
     else {
-        parser->return_type = SUMKA_TYPE_VOID;
-        item->fn.ret_type = sumka_refl_make_var(&parser->cg.refl, "", SUMKA_TYPE_VOID);
+        parser->return_type = sumka_refl_find(parser->refl, "void");
+        item->type = parser->return_type;
     }
 
     // Is definition or forward decl. 
@@ -334,7 +331,7 @@ SumkaError par_fn(SumkaParser *parser) {
         item->present = false;
     }
     
-    sumka_refl_seek(&parser->cg.refl, current_frame);
+    sumka_refl_seek(parser->refl, current_frame);
     return SUMKA_OK;
 }
 
@@ -345,12 +342,3 @@ SumkaError sumka_parser_parse(SumkaParser *parser) {
 }
 
 
-/*
-void sumka_parser_print_error(SumkaParser *parser, SumkaError err) {
-    const char *err_names[1024] = {
-        [SUMKA_ERR_TYPE_MISMATCH] = "Type mismatch",
-    };
-    printf("Error: %s(%d), at line %d\n", err_names[err], err, parser->current_.line);
-    printf("    %s\n", parser->err.txt);
-}
-*/

@@ -1,6 +1,9 @@
 This currently has some problems:
-    Parser manually parses built-in types (bad)
     Error messages are pretty much non-existent
+        Basically create error_handling.h or something like that
     Some other things, look for todos and fixme's
-    Probably clone basetypes for simplicity...
-
+    Add link-time function checking
+    Add branching
+    Add expressions
+    Add typechecking to reflection functions, maybe?
+    Add API instead of raw reflection and runtime passing

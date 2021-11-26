@@ -1,0 +1,4 @@
+/* should emit SUMKA_ERR_TYPE_NOT_FOUND */
+fn main(): x {
+    
+}

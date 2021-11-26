@@ -1,0 +1,6 @@
+/* should emit SUMKA_ERR_TOO_MANY_ARGS */
+fn fun()
+
+fn fun(param: int) {
+    printi(param)
+}

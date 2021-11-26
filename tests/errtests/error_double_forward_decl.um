@@ -1,0 +1,3 @@
+/* should emit SUMKA_ERR_DOUBLE_FORWARD_DECL */
+fn fun(param: int)
+fn fun(param: int)

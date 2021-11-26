@@ -1,0 +1,5 @@
+/* should emit SUMKA_ERR_CALL_ON_NON_FUNCTION */
+fn main() {
+    x := 0
+    x()
+}

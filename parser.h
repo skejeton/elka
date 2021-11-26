@@ -16,8 +16,12 @@ typedef struct SumkaParser {
     SumkaCodegen cg;
     SumkaToken current_;
     char tmpstrbuf_[1024];
+    SumkaRefl *refl;
+    
+    // I should probably move this to reflection
     SumkaReflItem *last_type;
     SumkaReflItem *return_type;
+    
     SumkaParserError err;
 } SumkaParser;
 
