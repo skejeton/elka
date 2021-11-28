@@ -1,1 +1,13 @@
-fn main() { print("Hello world") println() }
+fn fib(n: int): int {
+    if less(n, 2) {
+        return n
+    }
+    return plus(fib(minus(n, 1)), fib(minus(n, 2)))
+}
+
+fn main() {
+    printi(fib(20))
+    println()
+}
+
+

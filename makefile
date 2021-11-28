@@ -5,3 +5,5 @@ smol:
 	clang -lc *.c -o sumka -Wextra -Wall -Werror -pedantic -O2
 	strip sumka
 	upx -9 sumka
+fast:
+	clang -lc *.c -o sumka -Wextra -Wall -Werror -pedantic -O3

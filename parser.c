@@ -1,4 +1,5 @@
 #include "parser.h"
+#include "codegen.h"
 #include "lexer.h"
 #include <stdio.h>
 #include <string.h>
@@ -144,7 +145,7 @@ SumkaError par_call_params(SumkaParser *parser, SumkaReflItem *item) {
             arg = arg->sibling;
         checkout(pthen(parser, SUMKA_TT_COMMA));
     }
-    if (arg != NULL)
+    if (item && arg->sibling != NULL)
         return SUMKA_ERR_NOT_ENOUGH_ARGS;   
     return SUMKA_OK;
 }
@@ -209,15 +210,26 @@ SumkaError par_defn(SumkaToken name, SumkaParser *parser) {
     return SUMKA_OK;
 }
 
+static 
+SumkaError par_body(SumkaParser *parser);
+
 static
 SumkaError decide_statement(SumkaParser *parser) {
     SumkaToken name;
-    if (pif(parser, SUMKA_TT_RETURN)) {
+    if (pif(parser, SUMKA_TT_IF)) {
         checkout(pskip(parser));
-        sumka_codegen_instr(&parser->cg, SUMKA_INSTR_CLR);   
+        checkout(par_value(parser));
+        size_t genesis = sumka_codegen_branch(&parser->cg);
+        checkout(par_body(parser));
+        sumka_codegen_leave(&parser->cg, genesis);
+    }
+    else if (pif(parser, SUMKA_TT_RETURN)) {
+        checkout(pskip(parser));
         checkout(par_value(parser));
         if (parser->last_type != parser->return_type)
             return SUMKA_ERR_TYPE_MISMATCH;
+        if (parser->return_type != sumka_refl_find(parser->refl, "void"))
+            sumka_codegen_instr(&parser->cg, SUMKA_INSTR_CLR);   
         sumka_codegen_instr(&parser->cg, SUMKA_INSTR_RETN);   
     }
     // I need to fix this section to parse expressions because
@@ -273,7 +285,10 @@ SumkaError par_fn(SumkaParser *parser) {
 
     SumkaReflItem *arg = item->fn.first_arg;
 
+    int argc = 0;
+
     while (pifnt(parser, SUMKA_TT_RPAREN)) {
+        argc += 1;
         if (implementation && arg == NULL)
             return SUMKA_ERR_TOO_MANY_ARGS;
 
@@ -299,6 +314,8 @@ SumkaError par_fn(SumkaParser *parser) {
         
         checkout(pthen(parser, SUMKA_TT_COMMA));
     }
+    sumka_codegen_instr_iuc(&parser->cg, SUMKA_INSTR_BORROW_IUC, argc);
+
     if (implementation && arg != NULL)
         return SUMKA_ERR_NOT_ENOUGH_ARGS;
 
@@ -307,17 +324,17 @@ SumkaError par_fn(SumkaParser *parser) {
     if (pif(parser, SUMKA_TT_COLON)) {
         checkout(pskip(parser));
         checkout(par_type(parser, &item->type)); 
-        parser->return_type = item->type;
     }
     else {
-        parser->return_type = sumka_refl_find(parser->refl, "void");
-        item->type = parser->return_type;
+        item->type = sumka_refl_find(parser->refl, "void");
     }
+    parser->return_type = item->type;
 
     // Is definition or forward decl. 
     if (pif(parser, SUMKA_TT_LBRACE)) {
         checkout(par_body(parser));
-        sumka_codegen_instr(&parser->cg, SUMKA_INSTR_CLR);   
+        if (parser->return_type != sumka_refl_find(parser->refl, "void"))
+            sumka_codegen_instr(&parser->cg, SUMKA_INSTR_CLR);   
         sumka_codegen_instr(&parser->cg, SUMKA_INSTR_RETN);   
         item->present = true;
     }

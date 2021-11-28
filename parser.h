@@ -2,7 +2,6 @@
 #define SUMKA_PARSER_H__
 #include "lexer.h"
 #include "codegen.h"
-#include "ffi.h"
 #include <stdbool.h>
 
 typedef struct SumkaParserError {

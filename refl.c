@@ -106,11 +106,15 @@ void sumka_refl_trace(SumkaRefl *refl) {
     };
     
     for (int i = refl->stack_size-1; i >= 0; i -= 1) {
-        printf(":: %s %s %d\n", refl->stack[i]->name, types[refl->stack[i]->tag], refl->stack[i]->present);
+
+        printf(":: %s %s %d\n", refl->stack[i]->name,
+                                types[refl->stack[i]->tag],
+                                refl->stack[i]->present);
     }
 }
 
 void sumka_refl_add_param(SumkaReflItem *item, SumkaReflItem *other) {
+
     assert(item->tag == SUMKA_TAG_FUN && "Can't add parameter to non function");
 
     if (item->fn.first_arg) {

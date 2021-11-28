@@ -91,6 +91,8 @@ SumkaError ident_or_kw(SumkaLexer *lexer, SumkaToken *out) {
     
     if (verify(lexer, &capture, "fn"))
         *out = mktok(capture, SUMKA_TT_KW_FN);
+    else if (verify(lexer, &capture, "if"))
+        *out = mktok(capture, SUMKA_TT_IF);
     else if (verify(lexer, &capture, "return"))
         *out = mktok(capture, SUMKA_TT_RETURN);
     else

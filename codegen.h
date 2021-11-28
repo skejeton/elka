@@ -37,7 +37,10 @@ typedef enum SumkaInstruction {
 
     // Clears the stack frame of current function
     SUMKA_INSTR_CLR          = 8,
-    SUMKA_INSTR_CALL_FFI_IUC = 9
+    SUMKA_INSTR_CALL_FFI_IUC = 9,
+    
+    SUMKA_INSTR_JIF_IUC      = 10,
+    SUMKA_INSTR_BORROW_IUC   = 11
 } SumkaInstruction;
 
 typedef struct SumkaCodegen {
@@ -55,9 +58,16 @@ typedef struct SumkaCodegen {
     // The instructions are fixed 32 bit
     uint32_t instrs[1024];
     size_t instr_count;
+    
+    size_t branch_stack[1024];
+    size_t branch_stack_size;
 } SumkaCodegen;
 
 typedef struct SumkaLabel SumkaLabel;
+
+size_t sumka_codegen_branch(SumkaCodegen *cg);
+
+void sumka_codegen_leave(SumkaCodegen *cg, size_t genesis);
 
 // Puts SC-Addressed instruction into the instruction list
 void sumka_codegen_instr_sc(SumkaCodegen *cg, SumkaInstruction instr, char *scarg);
@@ -69,6 +79,9 @@ void sumka_codegen_instr_iuc(SumkaCodegen *cg, SumkaInstruction instr, size_t iu
 
 // Puts simple instruction into the instruction list
 void sumka_codegen_instr(SumkaCodegen *cg, SumkaInstruction instr);
+
+// Debug dump for a singular instruction
+void sumka_codegen_dump_instr(SumkaCodegen *cg, uint32_t instr);
 
 // Debug dump for codegen output
 void sumka_codegen_dbgdmp(SumkaCodegen *cg);

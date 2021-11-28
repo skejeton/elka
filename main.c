@@ -22,12 +22,30 @@ void print(SumkaRuntime *rt) {
 }
 
 void printi(SumkaRuntime *rt) {
-    printf("%zi", sumka_runtime_pop_int(rt)); 
+    printf("========= %zi ==========\n", sumka_runtime_pop_int(rt)); 
 }
 
 void println(SumkaRuntime *rt) {
     (void) rt;
     printf("\n"); 
+}
+
+void less(SumkaRuntime *rt) {
+    sumka_default_int_td b = sumka_runtime_pop_int(rt);
+    sumka_default_int_td a = sumka_runtime_pop_int(rt);
+    sumka_stackref_push(&rt->alloc, sumka_gc_alloc_int(&rt->alloc, a < b));
+}
+
+void plus(SumkaRuntime *rt) {
+    sumka_default_int_td b = sumka_runtime_pop_int(rt);
+    sumka_default_int_td a = sumka_runtime_pop_int(rt);
+    sumka_stackref_push(&rt->alloc, sumka_gc_alloc_int(&rt->alloc, a + b));
+}
+
+void minus(SumkaRuntime *rt) {
+    sumka_default_int_td b = sumka_runtime_pop_int(rt);
+    sumka_default_int_td a = sumka_runtime_pop_int(rt);
+    sumka_stackref_push(&rt->alloc, sumka_gc_alloc_int(&rt->alloc, a - b));
 }
 
 int main() {
@@ -36,6 +54,9 @@ int main() {
     
     SumkaRefl refl = sumka_refl_new();    
 
+    sumka_refl_register_ffi_fn(&refl, "less", less);
+    sumka_refl_register_ffi_fn(&refl, "plus", plus);
+    sumka_refl_register_ffi_fn(&refl, "minus", minus);
     sumka_refl_register_ffi_fn(&refl, "print", print);
     sumka_refl_register_ffi_fn(&refl, "printi", printi);
     sumka_refl_register_ffi_fn(&refl, "println", println);
