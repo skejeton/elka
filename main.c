@@ -30,33 +30,12 @@ void println(SumkaRuntime *rt) {
     printf("\n"); 
 }
 
-void less(SumkaRuntime *rt) {
-    sumka_default_int_td b = sumka_runtime_pop_int(rt);
-    sumka_default_int_td a = sumka_runtime_pop_int(rt);
-    sumka_mem_push_default_int(&rt->mem, a < b);
-}
-
-void plus(SumkaRuntime *rt) {
-    sumka_default_int_td b = sumka_runtime_pop_int(rt);
-    sumka_default_int_td a = sumka_runtime_pop_int(rt);
-    sumka_mem_push_default_int(&rt->mem, a + b);
-}
-
-void minus(SumkaRuntime *rt) {
-    sumka_default_int_td b = sumka_runtime_pop_int(rt);
-    sumka_default_int_td a = sumka_runtime_pop_int(rt);
-    sumka_mem_push_default_int(&rt->mem, a - b);
-}
-
 int main() {
     char *source = read_file("playground/main.um");
     SumkaLexer lexer = { .source = source };
     
     SumkaRefl refl = sumka_refl_new();    
 
-    sumka_refl_register_ffi_fn(&refl, "less", less);
-    sumka_refl_register_ffi_fn(&refl, "plus", plus);
-    sumka_refl_register_ffi_fn(&refl, "minus", minus);
     sumka_refl_register_ffi_fn(&refl, "print", print);
     sumka_refl_register_ffi_fn(&refl, "printi", printi);
     sumka_refl_register_ffi_fn(&refl, "println", println);
