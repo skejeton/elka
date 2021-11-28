@@ -8,7 +8,9 @@
 #include <errno.h>
 #include <assert.h>
 
+#ifndef checkout
 #define checkout(x) do { SumkaError err; if((err = (x))) { fprintf(stderr, ">>> %d %-20s %s:%d\n", err, __FUNCTION__, __FILE__, __LINE__); return err;} } while (0)
+#endif
 
 static
 SumkaError pskip(SumkaParser *parser) {
@@ -94,7 +96,10 @@ SumkaError par_value(SumkaParser *parser) {
         sumka_default_int_td num = strtoll(parser->lexer->source+value.start, &end, 10);
         if (errno == ERANGE) 
             return SUMKA_ERR_NUMBER_OUT_OF_RANGE;
-        sumka_codegen_instr_ic(&parser->cg, SUMKA_INSTR_PUSH_IC, num);
+        if (num >= 0)
+            sumka_codegen_instr_iuc(&parser->cg, SUMKA_INSTR_PUSH_IUC_I, num);
+        else
+            sumka_codegen_instr_ic(&parser->cg, SUMKA_INSTR_PUSH_IC, num);
         
         // NOTE: We must have a basetype find function
         parser->last_type = sumka_refl_find(parser->refl, "int");
@@ -177,7 +182,28 @@ static
 SumkaError par_call(SumkaToken name, SumkaParser *parser) {
     checkout(pthen(parser, SUMKA_TT_LPAREN));    
 
-    SumkaReflItem *callee = sumka_refl_lup(parser->refl, strmk(parser, &name));
+    char *strname = strmk(parser, &name);
+
+    if (strcmp(strname, "less") == 0) {
+        checkout(par_call_params(parser, NULL));  
+        sumka_codegen_instr(&parser->cg, SUMKA_INSTR_LESS);
+        checkout(pthen(parser, SUMKA_TT_RPAREN));
+        return SUMKA_OK;
+    }
+    else if (strcmp(strname, "plus") == 0) {
+        checkout(par_call_params(parser, NULL));  
+        sumka_codegen_instr(&parser->cg, SUMKA_INSTR_ADD);
+        checkout(pthen(parser, SUMKA_TT_RPAREN));
+        return SUMKA_OK;
+    }
+    else if (strcmp(strname, "minus") == 0) {
+        checkout(par_call_params(parser, NULL));  
+        sumka_codegen_instr(&parser->cg, SUMKA_INSTR_SUB);
+        checkout(pthen(parser, SUMKA_TT_RPAREN));
+        return SUMKA_OK;
+    }
+
+    SumkaReflItem *callee = sumka_refl_lup(parser->refl, strname);
     
     if (callee) {
         if (callee->tag == SUMKA_TAG_FUN) {

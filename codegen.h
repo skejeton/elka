@@ -40,7 +40,11 @@ typedef enum SumkaInstruction {
     SUMKA_INSTR_CALL_FFI_IUC = 9,
     
     SUMKA_INSTR_JIF_IUC      = 10,
-    SUMKA_INSTR_BORROW_IUC   = 11
+    SUMKA_INSTR_BORROW_IUC   = 11,
+    SUMKA_INSTR_LESS         = 12,
+    SUMKA_INSTR_ADD          = 13,
+    SUMKA_INSTR_SUB          = 14,
+    SUMKA_INSTR_PUSH_IUC_I   = 15
 } SumkaInstruction;
 
 typedef struct SumkaCodegen {

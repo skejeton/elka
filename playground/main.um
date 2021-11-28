@@ -6,7 +6,7 @@ fn fib(n: int): int {
 }
 
 fn main() {
-    printi(fib(20))
+    printi(fib(40))
     println()
 }
 

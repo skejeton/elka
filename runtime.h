@@ -1,12 +1,17 @@
 #ifndef SUMKA_RUNTIME_H__
 #define SUMKA_RUNTIME_H__
 #include "codegen.h"
-#include "gc.h"
+#include "mem.h"
+
+typedef struct SumkaFrame {
+    size_t return_addr;
+    size_t stack_at;
+} SumkaFrame; 
 
 typedef struct SumkaRuntime {
     SumkaCodegen *cg;
-    SumkaAlloc alloc;
-    size_t *callstack;
+    SumkaMem mem;
+    SumkaFrame *callstack;
     
     // Registers
     size_t rsp;

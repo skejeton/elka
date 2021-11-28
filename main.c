@@ -33,19 +33,19 @@ void println(SumkaRuntime *rt) {
 void less(SumkaRuntime *rt) {
     sumka_default_int_td b = sumka_runtime_pop_int(rt);
     sumka_default_int_td a = sumka_runtime_pop_int(rt);
-    sumka_stackref_push(&rt->alloc, sumka_gc_alloc_int(&rt->alloc, a < b));
+    sumka_mem_push_default_int(&rt->mem, a < b);
 }
 
 void plus(SumkaRuntime *rt) {
     sumka_default_int_td b = sumka_runtime_pop_int(rt);
     sumka_default_int_td a = sumka_runtime_pop_int(rt);
-    sumka_stackref_push(&rt->alloc, sumka_gc_alloc_int(&rt->alloc, a + b));
+    sumka_mem_push_default_int(&rt->mem, a + b);
 }
 
 void minus(SumkaRuntime *rt) {
     sumka_default_int_td b = sumka_runtime_pop_int(rt);
     sumka_default_int_td a = sumka_runtime_pop_int(rt);
-    sumka_stackref_push(&rt->alloc, sumka_gc_alloc_int(&rt->alloc, a - b));
+    sumka_mem_push_default_int(&rt->mem, a - b);
 }
 
 int main() {

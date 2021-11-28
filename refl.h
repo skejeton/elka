@@ -2,6 +2,8 @@
  * Copyright (C) 2021 ishdx2
  * Licensed under MIT license
  */
+#ifndef SUMKA_REFL_H__
+#define SUMKA_REFL_H__
 
 #include <stddef.h>
 #include <stdbool.h>
@@ -88,3 +90,4 @@ void           sumka_refl_dispose(SumkaRefl *refl);
 // @returns A new reflection with basetypes initialized
 SumkaRefl sumka_refl_new();
 
+#endif // SUMKA_REFL_H__
