@@ -17,7 +17,11 @@ typedef enum {
     SUMKA_TT_DEFN,
     SUMKA_TT_COMMA,
     SUMKA_TT_RETURN,
-    SUMKA_TT_IF
+    SUMKA_TT_IF,
+    SUMKA_TT_ASSIGN,
+    SUMKA_TT_FOR,
+    SUMKA_TT_LBRACKET,
+    SUMKA_TT_RBRACKET
 }
 SumkaTokenType;
 

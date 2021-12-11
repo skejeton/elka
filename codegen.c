@@ -54,6 +54,7 @@ const char *INSTR_MNEM[] = {
     [SUMKA_INSTR_PUSH_IUC_I]   = "push-iuc-i",
     [SUMKA_INSTR_CALL_IUC]     = "call-iuc",
     [SUMKA_INSTR_LOAD_IUC]     = "load-iuc",
+    [SUMKA_INSTR_GIF_IUC]      = "gif-iuc",
     [SUMKA_INSTR_CALL_SC]      = "call-sc",
     [SUMKA_INSTR_CALL_FFI_IUC] = "call-ffi",
     [SUMKA_INSTR_CLR]          = "clr",
@@ -63,6 +64,8 @@ const char *INSTR_MNEM[] = {
     [SUMKA_INSTR_LESS]         = "less",
     [SUMKA_INSTR_ADD]          = "add",
     [SUMKA_INSTR_SUB]          = "sub",
+    [SUMKA_INSTR_SET]          = "set",
+    [SUMKA_INSTR_BASED_IUC]    = "based-iuc"
 };
 
 
@@ -79,8 +82,11 @@ void sumka_codegen_dump_instr(SumkaCodegen *cg, uint32_t instr_id) {
         case SUMKA_INSTR_CALL_IUC:
         case SUMKA_INSTR_BORROW_IUC:
         case SUMKA_INSTR_LOAD_IUC:
+        case SUMKA_INSTR_SET:
+        case SUMKA_INSTR_GIF_IUC:
         case SUMKA_INSTR_PUSH_IUC_I:
         case SUMKA_INSTR_JIF_IUC:
+        case SUMKA_INSTR_BASED_IUC:
             printf(" \x1b[34m%u\x1b[0m", instr >> 6);
             break;
         case SUMKA_INSTR_PUSH_IC:

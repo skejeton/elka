@@ -3,9 +3,9 @@ all:
 	./sumka
 cachegrind:
 	clang -lc *.c -o sumka -Wextra -Wall -Werror -pedantic -g
-	valgrind --tool=callgrind --dump-instr=yes ./sumka
-	kcachegrind callgrind.out.*
-	rm callgrind.out.*
+	valgrind --tool=cachegrind ./sumka
+	kcachegrind cachegrind.out.*
+	rm cachegrind.out.*
 smol:
 	clang -lc *.c -o sumka -Wextra -Wall -Werror -pedantic -O2
 	strip sumka

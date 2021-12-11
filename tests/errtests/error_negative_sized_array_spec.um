@@ -1,0 +1,6 @@
+/* should emit :::SUMKA_ERR_NEGATIVE_SIZED_ARRAY */
+
+fn main() {
+    x := [-1]int{ 1, 2, 3 }
+}
+

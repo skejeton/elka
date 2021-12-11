@@ -1,13 +1,15 @@
-fn fib(n: int): int {
-    if less(n, 2) {
-        return n
+fn test(arr: int, n: int) {
+    id := 0
+    for less(id, n) {
+        printi(arr[n]) print("  ")
+        id = plus(id, 1)
     }
-    return plus(fib(minus(n, 1)), fib(minus(n, 2)))
 }
 
 fn main() {
-    printi(fib(40))
-    println()
+    x := [3]int{ 1, 2, 3 }
+    test(x, 3)
 }
+
 
 

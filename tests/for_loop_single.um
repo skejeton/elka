@@ -1,0 +1,8 @@
+fn main() {
+    x := 1
+    for less(x, 100000000) {
+        x = plus(x, 1)
+    }
+    printi(x)
+}
+

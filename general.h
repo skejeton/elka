@@ -16,7 +16,10 @@ typedef enum {
     SUMKA_ERR_CALL_ON_NON_FUNCTION, // 11
     SUMKA_ERR_TOO_MANY_ARGS,        // 12
     SUMKA_ERR_NOT_ENOUGH_ARGS,      // 13
-    SUMKA_ERR_DOUBLE_FORWARD_DECL   // 14
+    SUMKA_ERR_DOUBLE_FORWARD_DECL,  // 14
+    SUMKA_ERR_LITERAL_EXCESS_ITEMS, // 15
+    SUMKA_ERR_LITERAL_FEW_ITEMS,    // 16
+    SUMKA_ERR_NEAGTIVE_SIZED_ARRAY  // 17
 } __attribute__((warn_unused_result)) SumkaError;
 
 #endif

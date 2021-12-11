@@ -1,0 +1,6 @@
+/* should emit :::SUMKA_ERR_LITERAL_EXCESS_ITEMS */
+
+fn main() {
+    x := [1]int{ 1, 2, 3 }
+}
+

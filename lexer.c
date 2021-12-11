@@ -93,6 +93,8 @@ SumkaError ident_or_kw(SumkaLexer *lexer, SumkaToken *out) {
         *out = mktok(capture, SUMKA_TT_KW_FN);
     else if (verify(lexer, &capture, "if"))
         *out = mktok(capture, SUMKA_TT_IF);
+    else if (verify(lexer, &capture, "for"))
+        *out = mktok(capture, SUMKA_TT_FOR);
     else if (verify(lexer, &capture, "return"))
         *out = mktok(capture, SUMKA_TT_RETURN);
     else
@@ -131,6 +133,8 @@ SumkaError string(SumkaLexer *lexer, SumkaToken *token) {
 static
 SumkaError number(SumkaLexer *lexer, SumkaToken *out) {
     Capture capture = record(lexer);
+    if (lpeek(lexer) == '-')
+        lskip(lexer);
     while (lpeek(lexer) >= '0' && lpeek(lexer) <= '9')
         lskip(lexer);
     stop(lexer, &capture);
@@ -156,7 +160,13 @@ SumkaError decide(SumkaLexer *lexer, SumkaToken *out) {
         return simple(lexer, SUMKA_TT_LBRACE, out);
     if (lis(lexer, '}'))
         return simple(lexer, SUMKA_TT_RBRACE, out);
-    if (lpeek(lexer) >= '0' && lpeek(lexer) <= '9')
+    if (lis(lexer, '['))
+        return simple(lexer, SUMKA_TT_LBRACKET, out);
+    if (lis(lexer, ']'))
+        return simple(lexer, SUMKA_TT_RBRACKET, out);
+    if (lis(lexer, '='))
+        return simple(lexer, SUMKA_TT_ASSIGN, out);
+    if (lpeek(lexer) == '-' || (lpeek(lexer) >= '0' && lpeek(lexer) <= '9'))
         return number(lexer, out);
     /* FIXME: This isn't a very good way to handle multicharacter seq's
      *        i probably need to separate it

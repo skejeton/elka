@@ -1,4 +1,4 @@
-/* should emit SUMKA_ERR_INVALID_TYPE */
+/* should emit :::SUMKA_ERR_INVALID_TYPE */
 fn x()
 
 fn main(): x {

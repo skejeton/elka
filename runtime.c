@@ -61,19 +61,32 @@ void sumka_runtime_exec(SumkaRuntime *rt) {
     rt->mem = sumka_mem_init();
     push_call(rt);
 
-    printf("(sumka) found main at %zu\n", rt->rip);
+    //printf("(sumka) found main at %zu\n", rt->rip);
     while (true) {
         uint32_t instr = rt->cg->instrs[rt->rip];
-       /*
+        /*
         printf("[ ");
         for (size_t i = 0; i < rt->mem.stack_trail; i += 1) {
-            printf("%zi ", rt->mem.stack[i]);
+            if ( i == rt->callstack[rt->rsp-1].stack_at ) {
+                printf("\x1b[34m%zi\x1b[0m ", rt->mem.stack[i]);
+            }
+            else {
+                printf("%zi ", rt->mem.stack[i]);
+            }
         }
         printf("]\n");
         sumka_codegen_dump_instr(rt->cg, rt->rip);
-*/
+        */
         SumkaInstruction kind = SUMKA_INSTR_ID(instr);
+        
         switch (kind) {
+            // FIXME: RENAME THIS INSTRUCTION TO SET_IUC
+            case SUMKA_INSTR_SET: {
+                size_t trail = rt->callstack[rt->rsp-1].stack_at;
+                size_t offs = trail + (instr >> 6);
+                rt->mem.stack[offs] = sumka_mem_pop_default_int(&rt->mem);
+                rt->rip += 1;
+            } break;
             case SUMKA_INSTR_LESS: {
                 sumka_default_int_td b = rt->mem.stack[--rt->mem.stack_trail];
                 sumka_default_int_td a = rt->mem.stack[--rt->mem.stack_trail];
@@ -114,6 +127,13 @@ void sumka_runtime_exec(SumkaRuntime *rt) {
                 sumka_mem_push_default_int(&rt->mem, rt->mem.stack[offs]);
                 rt->rip += 1;
             } break;
+            case SUMKA_INSTR_BASED_IUC: {
+                sumka_default_int_td offs = sumka_mem_pop_default_int(&rt->mem);
+                size_t trail = rt->callstack[rt->rsp-1].stack_at;
+                size_t base = trail + (instr >> 6);
+                sumka_mem_push_default_int(&rt->mem, rt->mem.stack[base+offs]);
+                rt->rip += 1;
+            } break;
             case SUMKA_INSTR_CALL_SC: {
                 size_t label = find_label(rt, lup_sc(rt, instr));
                 rt->cg->instrs[rt->rip] = (SUMKA_INSTR_CALL_IUC) | (label << 6);
@@ -138,6 +158,16 @@ void sumka_runtime_exec(SumkaRuntime *rt) {
             case SUMKA_INSTR_JIF_IUC: {
                 sumka_default_int_td val = sumka_mem_pop_default_int(&rt->mem);
                 rt->rip += (!val)*((instr >> 6) - 1)+1;
+                /*
+                if (val) 
+                    rt->rip += 1;
+                else
+                    rt->rip += instr >> 6;
+                    */
+            } break;
+            case SUMKA_INSTR_GIF_IUC: {
+                sumka_default_int_td val = sumka_mem_pop_default_int(&rt->mem);
+                rt->rip -= (!!val)*((instr >> 6) + 1)-1;
                 /*
                 if (val) 
                     rt->rip += 1;

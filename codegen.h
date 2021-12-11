@@ -44,7 +44,12 @@ typedef enum SumkaInstruction {
     SUMKA_INSTR_LESS         = 12,
     SUMKA_INSTR_ADD          = 13,
     SUMKA_INSTR_SUB          = 14,
-    SUMKA_INSTR_PUSH_IUC_I   = 15
+    SUMKA_INSTR_PUSH_IUC_I   = 15,
+    SUMKA_INSTR_SET          = 16,
+    SUMKA_INSTR_GIF_IUC      = 17,
+    
+    // Load based on the IUC parameter, with relative index on stack
+    SUMKA_INSTR_BASED_IUC    = 18
 } SumkaInstruction;
 
 typedef struct SumkaCodegen {

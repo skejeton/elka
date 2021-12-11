@@ -22,7 +22,7 @@ void print(SumkaRuntime *rt) {
 }
 
 void printi(SumkaRuntime *rt) {
-    printf("========= %zi ==========\n", sumka_runtime_pop_int(rt)); 
+    printf("%zi", sumka_runtime_pop_int(rt)); 
 }
 
 void println(SumkaRuntime *rt) {
@@ -68,7 +68,7 @@ int main() {
 
     printf(" == Bytecode == \n");
     sumka_codegen_dbgdmp(&parser.cg);
-
+    fflush(stdout);
     printf(" == Execution == \n");
     SumkaRuntime runtime = { .cg = &parser.cg };
 

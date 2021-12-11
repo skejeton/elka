@@ -15,7 +15,9 @@ typedef enum SumkaReflItemKind {
     SUMKA_TAG_FFIFUN,
     SUMKA_TAG_FUN,
     SUMKA_TAG_VALUE,
-    SUMKA_TAG_BASETYPE
+    SUMKA_TAG_BASETYPE,
+    SUMKA_TAG_ARRAY,
+    SUMKA_TAG_INTRIN
 } SumkaReflItemKind;
 
 typedef enum SumkaBasetype {
@@ -38,6 +40,7 @@ typedef struct SumkaReflItem {
         } fn;
         SumkaBasetype basetype;
         SumkaFFIExec ffi_fn;
+        size_t array_size;
     };
     struct SumkaReflItem *sibling;   
 } SumkaReflItem;
@@ -54,38 +57,41 @@ const SumkaReflItem *sumka_basetype(SumkaReflItemKind kind);
 
 // NOTE: This implicitly adds the FFI function onto the reflection stack
 //       For convenience
-void           sumka_refl_register_ffi_fn(SumkaRefl *refl, char *name, SumkaFFIExec exec);
+void sumka_refl_register_ffi_fn(SumkaRefl *refl, char *name, SumkaFFIExec exec);
 
 SumkaReflItem *sumka_refl_make_fn(SumkaRefl *refl, char *name, size_t addr);
 
 SumkaReflItem *sumka_refl_make_var(SumkaRefl *refl, char *name, SumkaReflItem *type);
 
+/// @brief Returns a dummy reflection item that simulates a value/instance
+SumkaReflItem sumka_refl_make_dummy(SumkaReflItem *type, SumkaReflItemKind kind);
+
 /// @returns if `value` is an instance of type `type`
-bool           sumka_refl_instanceof(SumkaReflItem *value, SumkaReflItem *type);
+bool sumka_refl_instanceof(SumkaReflItem *value, SumkaReflItem *type);
 
 /// @brief Debug tracing function 
-void           sumka_refl_trace(SumkaRefl *refl);
+void sumka_refl_trace(SumkaRefl *refl);
 
 SumkaReflItem *sumka_refl_find(SumkaRefl *refl, const char *name);
 
-void           sumka_refl_add_param(SumkaReflItem *item, SumkaReflItem *other);
+void sumka_refl_add_param(SumkaReflItem *item, SumkaReflItem *other);
 
-// @brief This will look up reflection item on the stack, this is the
-//        recommended function to use when you want to look something up
+/// @brief This will look up reflection item on the stack, this is the
+///        recommended function to use when you want to look something up
 SumkaReflItem *sumka_refl_lup(SumkaRefl *refl, const char *name);
 
-// @brief This does the same as the function above, but instead returns an index
-//        For the reflection item, this is probably [temporary]
-//        NOTE: This returns an index into the REFLECTION STACK!!
-int            sumka_refl_lup_id(SumkaRefl *refl, const char *name);
+/// @brief This does the same as the function above, but instead returns an index
+///        For the reflection item, this is probably [temporary]
+///        NOTE: This returns an index into the REFLECTION STACK!!
+int sumka_refl_lup_id(SumkaRefl *refl, const char *name);
 
-size_t         sumka_refl_peek(SumkaRefl *refl);
+size_t sumka_refl_peek(SumkaRefl *refl);
 
-void           sumka_refl_seek(SumkaRefl *refl, size_t n);
+void sumka_refl_seek(SumkaRefl *refl, size_t n);
 
-void           sumka_refl_push(SumkaRefl *refl, SumkaReflItem *item);
+void sumka_refl_push(SumkaRefl *refl, SumkaReflItem *item);
 
-void           sumka_refl_dispose(SumkaRefl *refl);
+void sumka_refl_dispose(SumkaRefl *refl);
 
 // @returns A new reflection with basetypes initialized
 SumkaRefl sumka_refl_new();

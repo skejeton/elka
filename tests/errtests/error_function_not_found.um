@@ -1,4 +1,4 @@
-/* should emit SUMKA_ERR_VARIABLE_NOT_FOUND */
+/* should emit :::SUMKA_ERR_VARIABLE_NOT_FOUND */
 
 fn bad() {
     no_function()

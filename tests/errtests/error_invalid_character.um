@@ -1,2 +1,2 @@
-/* should emit SUMKA_ERR_INVALID_CHARACTER */
+/* should emit :::SUMKA_ERR_INVALID_CHARACTER */
 \

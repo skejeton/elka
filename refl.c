@@ -17,7 +17,8 @@ static
 SumkaReflItem generic_item(const char *name, SumkaReflItemKind tag) {
     return (SumkaReflItem) {
         // FIXME: Remove strdup here
-        .name = strdup(name),
+        // NOTE: If we recieve an empty string we don't strdup it, this is for dummy maker thingey
+        .name = *name ? strdup(name) : "",
         .present = true,
         .tag = tag
     };   
@@ -30,6 +31,12 @@ void sumka_refl_register_ffi_fn(SumkaRefl *refl, char *name, SumkaFFIExec exec) 
     item->ffi_fn = exec;
     
     sumka_refl_push(refl, item);
+}
+
+SumkaReflItem sumka_refl_make_dummy(SumkaReflItem *type, SumkaReflItemKind kind) {
+    SumkaReflItem item = generic_item("", kind);
+    item.type = type;
+    return item;
 }
 
 SumkaReflItem *sumka_refl_make_fn(SumkaRefl *refl, char *name, size_t addr) {
@@ -102,7 +109,9 @@ void sumka_refl_trace(SumkaRefl *refl) {
         [SUMKA_TAG_FFIFUN]   = "FFIFunction",
         [SUMKA_TAG_FUN]      = "Function",
         [SUMKA_TAG_VALUE]    = "Value",
-        [SUMKA_TAG_BASETYPE] = "Basetype"
+        [SUMKA_TAG_BASETYPE] = "Basetype",
+        [SUMKA_TAG_ARRAY]    = "Array",
+        [SUMKA_TAG_INTRIN]   = "Intrinsic",
     };
     
     for (int i = refl->stack_size-1; i >= 0; i -= 1) {

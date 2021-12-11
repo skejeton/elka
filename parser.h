@@ -11,6 +11,7 @@ typedef struct SumkaParserError {
 
 typedef struct SumkaParser {
     bool eof;
+    size_t stack_base;
     SumkaLexer *lexer;
     SumkaCodegen cg;
     SumkaToken current_;
@@ -18,8 +19,9 @@ typedef struct SumkaParser {
     SumkaRefl *refl;
     
     // I should probably move this to reflection
-    SumkaReflItem *last_type;
+    SumkaReflItem last_item;
     SumkaReflItem *return_type;
+    
     
     SumkaParserError err;
 } SumkaParser;
