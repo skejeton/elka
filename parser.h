@@ -1,32 +1,32 @@
-#ifndef SUMKA_PARSER_H__
-#define SUMKA_PARSER_H__
+#ifndef ELKA_PARSER_H__
+#define ELKA_PARSER_H__
 #include "lexer.h"
 #include "codegen.h"
 #include <stdbool.h>
 
-typedef struct SumkaParserError {
+typedef struct ElkaParserError {
     // FIXME: For now we're just gonna store text, yeah
     char txt[1024];
-} SumkaParserError;
+} ElkaParserError;
 
-typedef struct SumkaParser {
+typedef struct ElkaParser {
     bool eof;
     size_t stack_base;
-    SumkaLexer *lexer;
-    SumkaCodegen cg;
-    SumkaToken current_;
+    ElkaLexer *lexer;
+    ElkaCodegen cg;
+    ElkaToken current_;
     char tmpstrbuf_[1024];
-    SumkaRefl *refl;
+    ElkaRefl *refl;
     
     // I should probably move this to reflection
-    SumkaReflItem last_item;
-    SumkaReflItem *return_type;
+    ElkaReflItem last_item;
+    ElkaReflItem *return_type;
     
     
-    SumkaParserError err;
-} SumkaParser;
+    ElkaParserError err;
+} ElkaParser;
 
-SumkaError sumka_parser_parse(SumkaParser *parser);
-void sumka_parser_print_error(SumkaParser *parser, SumkaError err);
+ElkaError elka_parser_parse(SumkaParser *parser);
+void elka_parser_print_error(ElkaParser *parser, SumkaError err);
 
 #endif

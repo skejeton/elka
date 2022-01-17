@@ -1,5 +1,5 @@
-#ifndef SUMKA_CODEGEN_H__
-#define SUMKA_CODEGEN_H__
+#ifndef ELKA_CODEGEN_H__
+#define ELKA_CODEGEN_H__
 #include <stddef.h>
 #include "refl.h"
 #include <stdint.h>
@@ -18,43 +18,43 @@
  * IC  = Integer constant (LUT)
  */
  
-#define SUMKA_INSTR_ID(x) ((SumkaInstruction)(x & 0x3F))
-#define SUMKA_IUC_ARG1(x) ((size_t)( x >> 6 ))
+#define ELKA_INSTR_ID(x) ((ElkaInstruction)(x & 0x3F))
+#define ELKA_IUC_ARG1(x) ((size_t)( x >> 6 ))
 
-typedef int64_t sumka_default_int_td;
+typedef int64_t elka_default_int_td;
 
-typedef enum SumkaInstruction {
-    SUMKA_INSTR_PUSH_SC      = 0,
-    SUMKA_INSTR_PUSH_IC      = 1,
-    SUMKA_INSTR_CALL_SC      = 2,
+typedef enum ElkaInstruction {
+    ELKA_INSTR_PUSH_SC      = 0,
+    ELKA_INSTR_PUSH_IC      = 1,
+    ELKA_INSTR_CALL_SC      = 2,
     
     /* This will reserve data specified by
      * string length on stack 
      */
-    SUMKA_INSTR_LOAD_IUC     = 5,
-    SUMKA_INSTR_CALL_IUC     = 6,
-    SUMKA_INSTR_RETN         = 7,
+    ELKA_INSTR_LOAD_IUC     = 5,
+    ELKA_INSTR_CALL_IUC     = 6,
+    ELKA_INSTR_RETN         = 7,
 
     // Clears the stack frame of current function
-    SUMKA_INSTR_CLR          = 8,
-    SUMKA_INSTR_CALL_FFI_IUC = 9,
+    ELKA_INSTR_CLR          = 8,
+    ELKA_INSTR_CALL_FFI_IUC = 9,
     
-    SUMKA_INSTR_JIF_IUC      = 10,
-    SUMKA_INSTR_BORROW_IUC   = 11,
-    SUMKA_INSTR_LESS         = 12,
-    SUMKA_INSTR_ADD          = 13,
-    SUMKA_INSTR_SUB          = 14,
-    SUMKA_INSTR_PUSH_IUC_I   = 15,
-    SUMKA_INSTR_SET          = 16,
-    SUMKA_INSTR_GIF_IUC      = 17,
+    ELKA_INSTR_JIF_IUC      = 10,
+    ELKA_INSTR_BORROW_IUC   = 11,
+    ELKA_INSTR_LESS         = 12,
+    ELKA_INSTR_ADD          = 13,
+    ELKA_INSTR_SUB          = 14,
+    ELKA_INSTR_PUSH_IUC_I   = 15,
+    ELKA_INSTR_SET          = 16,
+    ELKA_INSTR_GIF_IUC      = 17,
     
     // Load based on the IUC parameter, with relative index on stack
-    SUMKA_INSTR_BASED_IUC    = 18
-} SumkaInstruction;
+    ELKA_INSTR_BASED_IUC    = 18
+} ElkaInstruction;
 
-typedef struct SumkaCodegen {
+typedef struct ElkaCodegen {
     // I might remove the reflection here
-    SumkaRefl *refl;
+    ElkaRefl *refl;
     
     // Constant lookup table
     uint8_t lut[1 << 14];
@@ -70,31 +70,31 @@ typedef struct SumkaCodegen {
     
     size_t branch_stack[1024];
     size_t branch_stack_size;
-} SumkaCodegen;
+} ElkaCodegen;
 
-typedef struct SumkaLabel SumkaLabel;
+typedef struct ElkaLabel SumkaLabel;
 
-size_t sumka_codegen_branch(SumkaCodegen *cg);
+size_t elka_codegen_branch(ElkaCodegen *cg);
 
-void sumka_codegen_leave(SumkaCodegen *cg, size_t genesis);
+void elka_codegen_leave(ElkaCodegen *cg, size_t genesis);
 
 // Puts SC-Addressed instruction into the instruction list
-void sumka_codegen_instr_sc(SumkaCodegen *cg, SumkaInstruction instr, char *scarg);
+void elka_codegen_instr_sc(ElkaCodegen *cg, SumkaInstruction instr, char *scarg);
 
 // Puts IC-Addressed instruction into the instruction list
-void sumka_codegen_instr_ic(SumkaCodegen *cg, SumkaInstruction instr, sumka_default_int_td icarg);
+void elka_codegen_instr_ic(ElkaCodegen *cg, SumkaInstruction instr, sumka_default_int_td icarg);
 // Puts IUC-Addressed instruction into the instruction list
-void sumka_codegen_instr_iuc(SumkaCodegen *cg, SumkaInstruction instr, size_t iuc);
+void elka_codegen_instr_iuc(ElkaCodegen *cg, SumkaInstruction instr, size_t iuc);
 
 // Puts simple instruction into the instruction list
-void sumka_codegen_instr(SumkaCodegen *cg, SumkaInstruction instr);
+void elka_codegen_instr(ElkaCodegen *cg, SumkaInstruction instr);
 
 // Debug dump for a singular instruction
-void sumka_codegen_dump_instr(SumkaCodegen *cg, uint32_t instr);
+void elka_codegen_dump_instr(ElkaCodegen *cg, uint32_t instr);
 
 // Debug dump for codegen output
-void sumka_codegen_dbgdmp(SumkaCodegen *cg);
+void elka_codegen_dbgdmp(ElkaCodegen *cg);
 
-void sumka_codegen_dispose(SumkaCodegen *cg);
+void elka_codegen_dispose(ElkaCodegen *cg);
 #endif
 

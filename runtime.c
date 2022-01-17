@@ -8,12 +8,12 @@
 /* FIXME: Use hash table
  */
 static
-size_t find_label(SumkaRuntime *rt, char *name) {
-    SumkaReflItem *item = sumka_refl_lup(rt->cg->refl, name);
+size_t find_label(ElkaRuntime *rt, char *name) {
+    ElkaReflItem *item = elka_refl_lup(rt->cg->refl, name);
     
     if (!item && !item->present)
         goto error;
-    if (item->tag != SUMKA_TAG_FUN)
+    if (item->tag != ELKA_TAG_FUN)
         goto error2;
     
     return item->fn.addr;
@@ -27,41 +27,41 @@ error2:
 
 // Looks up string REAL address
 static
-char* lup_sc(SumkaRuntime *rt, uint32_t instr) {
+char* lup_sc(ElkaRuntime *rt, uint32_t instr) {
     return (char*)&rt->cg->lut[rt->cg->lut_indices[instr>>6]];
 }
 
 static
-sumka_default_int_td lup_ic(SumkaRuntime *rt, uint32_t instr) {
-    return *(sumka_default_int_td*)&rt->cg->lut[rt->cg->lut_indices[instr>>6]];
+elka_default_int_td lup_ic(ElkaRuntime *rt, uint32_t instr) {
+    return *(elka_default_int_td*)&rt->cg->lut[rt->cg->lut_indices[instr>>6]];
 }
 
 static
-void push_call(SumkaRuntime *rt) {
+void push_call(ElkaRuntime *rt) {
     /*
     if (rt->rsp >= (1 << 14)) {
         printf("Stack overflow!\n");
         exit(-1);
     }
     */
-    rt->callstack[rt->rsp++] = (SumkaFrame) { rt->rip, rt->mem.stack_trail };    
+    rt->callstack[rt->rsp++] = (ElkaFrame) { rt->rip, rt->mem.stack_trail };    
 }
 
-char* sumka_runtime_pop_str(SumkaRuntime *rt) {
-    return (char*)sumka_mem_pop_default_int(&rt->mem);
+char* elka_runtime_pop_str(ElkaRuntime *rt) {
+    return (char*)elka_mem_pop_default_int(&rt->mem);
 }
 
-sumka_default_int_td sumka_runtime_pop_int(SumkaRuntime *rt) {
-    return sumka_mem_pop_default_int(&rt->mem);
+elka_default_int_td sumka_runtime_pop_int(ElkaRuntime *rt) {
+    return elka_mem_pop_default_int(&rt->mem);
 }
 
-void sumka_runtime_exec(SumkaRuntime *rt) {
-    rt->callstack = malloc(sizeof(SumkaFrame)*(1 << 14));
+void elka_runtime_exec(ElkaRuntime *rt) {
+    rt->callstack = malloc(sizeof(ElkaFrame)*(1 << 14));
     rt->rip = find_label(rt, "main");
-    rt->mem = sumka_mem_init();
+    rt->mem = elka_mem_init();
     push_call(rt);
 
-    //printf("(sumka) found main at %zu\n", rt->rip);
+    //printf("(elka) found main at %zu\n", rt->rip);
     while (true) {
         uint32_t instr = rt->cg->instrs[rt->rip];
         /*
@@ -75,88 +75,88 @@ void sumka_runtime_exec(SumkaRuntime *rt) {
             }
         }
         printf("]\n");
-        sumka_codegen_dump_instr(rt->cg, rt->rip);
+        elka_codegen_dump_instr(rt->cg, rt->rip);
         */
-        SumkaInstruction kind = SUMKA_INSTR_ID(instr);
+        ElkaInstruction kind = ELKA_INSTR_ID(instr);
         
         switch (kind) {
             // FIXME: RENAME THIS INSTRUCTION TO SET_IUC
-            case SUMKA_INSTR_SET: {
+            case ELKA_INSTR_SET: {
                 size_t trail = rt->callstack[rt->rsp-1].stack_at;
                 size_t offs = trail + (instr >> 6);
-                rt->mem.stack[offs] = sumka_mem_pop_default_int(&rt->mem);
+                rt->mem.stack[offs] = elka_mem_pop_default_int(&rt->mem);
                 rt->rip += 1;
             } break;
-            case SUMKA_INSTR_LESS: {
-                sumka_default_int_td b = rt->mem.stack[--rt->mem.stack_trail];
-                sumka_default_int_td a = rt->mem.stack[--rt->mem.stack_trail];
+            case ELKA_INSTR_LESS: {
+                elka_default_int_td b = rt->mem.stack[--rt->mem.stack_trail];
+                elka_default_int_td a = rt->mem.stack[--rt->mem.stack_trail];
                 rt->mem.stack[rt->mem.stack_trail++] = a < b;
                 rt->rip += 1;
             } break;
-            case SUMKA_INSTR_ADD: {
-                sumka_default_int_td b = rt->mem.stack[--rt->mem.stack_trail];
-                sumka_default_int_td a = rt->mem.stack[--rt->mem.stack_trail];
+            case ELKA_INSTR_ADD: {
+                elka_default_int_td b = rt->mem.stack[--rt->mem.stack_trail];
+                elka_default_int_td a = rt->mem.stack[--rt->mem.stack_trail];
                 rt->mem.stack[rt->mem.stack_trail++] = a + b;
                 rt->rip += 1;
             } break;
-            case SUMKA_INSTR_SUB: {
-                sumka_default_int_td b = rt->mem.stack[--rt->mem.stack_trail];
-                sumka_default_int_td a = rt->mem.stack[--rt->mem.stack_trail];
+            case ELKA_INSTR_SUB: {
+                elka_default_int_td b = rt->mem.stack[--rt->mem.stack_trail];
+                elka_default_int_td a = rt->mem.stack[--rt->mem.stack_trail];
                 rt->mem.stack[rt->mem.stack_trail++] = a - b;
                 rt->rip += 1;
             } break;
-            case SUMKA_INSTR_BORROW_IUC: {
+            case ELKA_INSTR_BORROW_IUC: {
                 rt->callstack[rt->rsp-1].stack_at -= instr >> 6;
                 rt->rip += 1;
             } break;
-            case SUMKA_INSTR_CALL_IUC: {
+            case ELKA_INSTR_CALL_IUC: {
                 push_call(rt);
                 rt->rip = instr >> 6;
             } break;
-            case SUMKA_INSTR_CALL_FFI_IUC: {
+            case ELKA_INSTR_CALL_FFI_IUC: {
                 rt->cg->refl->refls[instr >> 6].ffi_fn(rt);
                 rt->rip += 1;
             } break;
-            case SUMKA_INSTR_PUSH_IUC_I: {
-                sumka_mem_push_default_int(&rt->mem, instr >> 6);
+            case ELKA_INSTR_PUSH_IUC_I: {
+                elka_mem_push_default_int(&rt->mem, instr >> 6);
                 rt->rip += 1;
             } break;
-            case SUMKA_INSTR_LOAD_IUC: {
+            case ELKA_INSTR_LOAD_IUC: {
                 size_t trail = rt->callstack[rt->rsp-1].stack_at;
                 size_t offs = trail + (instr >> 6);
-                sumka_mem_push_default_int(&rt->mem, rt->mem.stack[offs]);
+                elka_mem_push_default_int(&rt->mem, rt->mem.stack[offs]);
                 rt->rip += 1;
             } break;
-            case SUMKA_INSTR_BASED_IUC: {
-                sumka_default_int_td offs = sumka_mem_pop_default_int(&rt->mem);
+            case ELKA_INSTR_BASED_IUC: {
+                elka_default_int_td offs = sumka_mem_pop_default_int(&rt->mem);
                 size_t trail = rt->callstack[rt->rsp-1].stack_at;
                 size_t base = trail + (instr >> 6);
-                sumka_mem_push_default_int(&rt->mem, rt->mem.stack[base+offs]);
+                elka_mem_push_default_int(&rt->mem, rt->mem.stack[base+offs]);
                 rt->rip += 1;
             } break;
-            case SUMKA_INSTR_CALL_SC: {
+            case ELKA_INSTR_CALL_SC: {
                 size_t label = find_label(rt, lup_sc(rt, instr));
-                rt->cg->instrs[rt->rip] = (SUMKA_INSTR_CALL_IUC) | (label << 6);
+                rt->cg->instrs[rt->rip] = (ELKA_INSTR_CALL_IUC) | (label << 6);
             } break;
-            case SUMKA_INSTR_PUSH_SC: {
+            case ELKA_INSTR_PUSH_SC: {
                 char *s = lup_sc(rt, instr);
-                sumka_mem_push_default_int(&rt->mem, (sumka_default_int_td)s);
+                elka_mem_push_default_int(&rt->mem, (sumka_default_int_td)s);
                 rt->rip += 1;  
             } break;
-            case SUMKA_INSTR_PUSH_IC: {
-                sumka_default_int_td val = lup_ic(rt, instr);
-                sumka_mem_push_default_int(&rt->mem, (sumka_default_int_td)val);
+            case ELKA_INSTR_PUSH_IC: {
+                elka_default_int_td val = lup_ic(rt, instr);
+                elka_mem_push_default_int(&rt->mem, (sumka_default_int_td)val);
                 rt->rip += 1;  
             } break;
-            case SUMKA_INSTR_CLR: {
-                sumka_default_int_td val = sumka_mem_pop_default_int(&rt->mem);
+            case ELKA_INSTR_CLR: {
+                elka_default_int_td val = sumka_mem_pop_default_int(&rt->mem);
                 rt->mem.stack_trail = rt->callstack[rt->rsp-1].stack_at;
-                sumka_mem_push_default_int(&rt->mem, val);
+                elka_mem_push_default_int(&rt->mem, val);
 
                 rt->rip += 1;
             } break;
-            case SUMKA_INSTR_JIF_IUC: {
-                sumka_default_int_td val = sumka_mem_pop_default_int(&rt->mem);
+            case ELKA_INSTR_JIF_IUC: {
+                elka_default_int_td val = sumka_mem_pop_default_int(&rt->mem);
                 rt->rip += (!val)*((instr >> 6) - 1)+1;
                 /*
                 if (val) 
@@ -165,8 +165,8 @@ void sumka_runtime_exec(SumkaRuntime *rt) {
                     rt->rip += instr >> 6;
                     */
             } break;
-            case SUMKA_INSTR_GIF_IUC: {
-                sumka_default_int_td val = sumka_mem_pop_default_int(&rt->mem);
+            case ELKA_INSTR_GIF_IUC: {
+                elka_default_int_td val = sumka_mem_pop_default_int(&rt->mem);
                 rt->rip -= (!!val)*((instr >> 6) + 1)-1;
                 /*
                 if (val) 
@@ -175,7 +175,7 @@ void sumka_runtime_exec(SumkaRuntime *rt) {
                     rt->rip += instr >> 6;
                     */
             } break;
-            case SUMKA_INSTR_RETN: {
+            case ELKA_INSTR_RETN: {
                 if (rt->rsp == 1)
                     goto cleanup;
                 rt->rip = rt->callstack[--rt->rsp].return_addr+1;
@@ -183,6 +183,6 @@ void sumka_runtime_exec(SumkaRuntime *rt) {
         }
     }
 cleanup:
-    sumka_mem_deinit(&rt->mem);
+    elka_mem_deinit(&rt->mem);
     free(rt->callstack);
 }

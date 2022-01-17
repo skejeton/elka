@@ -17,63 +17,63 @@ char* read_file(const char *path) {
     return input;
 }
 
-void print(SumkaRuntime *rt) {
-    printf("%s", sumka_runtime_pop_str(rt)); 
+void print(ElkaRuntime *rt) {
+    printf("%s", elka_runtime_pop_str(rt)); 
 }
 
-void printi(SumkaRuntime *rt) {
-    printf("%zi", sumka_runtime_pop_int(rt)); 
+void printi(ElkaRuntime *rt) {
+    printf("%zi", elka_runtime_pop_int(rt)); 
 }
 
-void println(SumkaRuntime *rt) {
+void println(ElkaRuntime *rt) {
     (void) rt;
     printf("\n"); 
 }
 
 int main() {
     char *source = read_file("playground/main.um");
-    SumkaLexer lexer = { .source = source };
+    ElkaLexer lexer = { .source = source };
     
-    SumkaRefl refl = sumka_refl_new();    
+    ElkaRefl refl = elka_refl_new();    
 
-    sumka_refl_register_ffi_fn(&refl, "print", print);
-    sumka_refl_register_ffi_fn(&refl, "printi", printi);
-    sumka_refl_register_ffi_fn(&refl, "println", println);
+    elka_refl_register_ffi_fn(&refl, "print", print);
+    elka_refl_register_ffi_fn(&refl, "printi", printi);
+    elka_refl_register_ffi_fn(&refl, "println", println);
     
     
-    SumkaParser parser = { .lexer = &lexer, .refl = &refl };
+    ElkaParser parser = { .lexer = &lexer, .refl = &refl };
     parser.cg.refl = &refl;
     /*
-    SumkaToken tok;
-    SumkaError err;
-    while ((err = sumka_lex_next(&lexer, &tok)) == SUMKA_OK) {
-        sumka_token_dbgdmp(&lexer, &tok);
+    ElkaToken tok;
+    ElkaError err;
+    while ((err = elka_lex_next(&lexer, &tok)) == ELKA_OK) {
+        elka_token_dbgdmp(&lexer, &tok);
     }
 
-    if (err && err != SUMKA_ERR_EOF) {
+    if (err && err != ELKA_ERR_EOF) {
         printf("Error number %d, %d:%d\n", err, lexer.line_+1, lexer.column_+1);
         return -1;
     }
     */
     
-    SumkaError err = sumka_parser_parse(&parser);
-    sumka_refl_trace(parser.refl);
+    ElkaError err = elka_parser_parse(&parser);
+    elka_refl_trace(parser.refl);
     if (err) {
-        sumka_refl_dispose(parser.refl);
+        elka_refl_dispose(parser.refl);
         printf("Error at %d:%d\n", parser.current_.line+1, parser.current_.column+1);
-        //sumka_parser_print_error(&parser, err);
+        //elka_parser_print_error(&parser, err);
         free(source);
         return -1;
     }
 
     printf(" == Bytecode == \n");
-    sumka_codegen_dbgdmp(&parser.cg);
+    elka_codegen_dbgdmp(&parser.cg);
     fflush(stdout);
     printf(" == Execution == \n");
-    SumkaRuntime runtime = { .cg = &parser.cg };
+    ElkaRuntime runtime = { .cg = &parser.cg };
 
-    sumka_runtime_exec(&runtime);
-    sumka_refl_dispose(&refl);
-    sumka_codegen_dispose(&parser.cg);
+    elka_runtime_exec(&runtime);
+    elka_refl_dispose(&refl);
+    elka_codegen_dispose(&parser.cg);
     free(source);
 }

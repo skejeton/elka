@@ -1,99 +1,99 @@
-/* Reflection for Sumka
+/* Reflection for Elka
  * Copyright (C) 2021 ishdx2
  * Licensed under MIT license
  */
-#ifndef SUMKA_REFL_H__
-#define SUMKA_REFL_H__
+#ifndef ELKA_REFL_H__
+#define ELKA_REFL_H__
 
 #include <stddef.h>
 #include <stdbool.h>
 
-struct SumkaRuntime;
-typedef void (*SumkaFFIExec)(struct SumkaRuntime *runtime);
+struct ElkaRuntime;
+typedef void (*ElkaFFIExec)(struct SumkaRuntime *runtime);
 
-typedef enum SumkaReflItemKind {
-    SUMKA_TAG_FFIFUN,
-    SUMKA_TAG_FUN,
-    SUMKA_TAG_VALUE,
-    SUMKA_TAG_BASETYPE,
-    SUMKA_TAG_ARRAY,
-    SUMKA_TAG_INTRIN
-} SumkaReflItemKind;
+typedef enum ElkaReflItemKind {
+    ELKA_TAG_FFIFUN,
+    ELKA_TAG_FUN,
+    ELKA_TAG_VALUE,
+    ELKA_TAG_BASETYPE,
+    ELKA_TAG_ARRAY,
+    ELKA_TAG_INTRIN
+} ElkaReflItemKind;
 
-typedef enum SumkaBasetype {
-    SUMKA_TYPE_VOID,
-    SUMKA_TYPE_STR,
-    SUMKA_TYPE_INT,
-} SumkaBasetype;
+typedef enum ElkaBasetype {
+    ELKA_TYPE_VOID,
+    ELKA_TYPE_STR,
+    ELKA_TYPE_INT,
+} ElkaBasetype;
 
-typedef struct SumkaReflItem {
+typedef struct ElkaReflItem {
     char *name;
     
     // NOTE: For functions this is the return type
-    enum SumkaReflItemKind tag;
-    struct SumkaReflItem *type; 
+    enum ElkaReflItemKind tag;
+    struct ElkaReflItem *type; 
     bool present;
     union {
         struct {
             size_t addr;
-            struct SumkaReflItem *first_arg;
+            struct ElkaReflItem *first_arg;
         } fn;
-        SumkaBasetype basetype;
-        SumkaFFIExec ffi_fn;
+        ElkaBasetype basetype;
+        ElkaFFIExec ffi_fn;
         size_t array_size;
     };
-    struct SumkaReflItem *sibling;   
-} SumkaReflItem;
+    struct ElkaReflItem *sibling;   
+} ElkaReflItem;
 
-typedef struct SumkaRefl {
-    SumkaReflItem refls[2048];
+typedef struct ElkaRefl {
+    ElkaReflItem refls[2048];
     size_t refl_count;
-    SumkaReflItem *stack[2048];
+    ElkaReflItem *stack[2048];
     size_t stack_size;
-} SumkaRefl;
+} ElkaRefl;
 
 /// @returns Refection item of a base type
-const SumkaReflItem *sumka_basetype(SumkaReflItemKind kind);
+const ElkaReflItem *elka_basetype(SumkaReflItemKind kind);
 
 // NOTE: This implicitly adds the FFI function onto the reflection stack
 //       For convenience
-void sumka_refl_register_ffi_fn(SumkaRefl *refl, char *name, SumkaFFIExec exec);
+void elka_refl_register_ffi_fn(ElkaRefl *refl, char *name, SumkaFFIExec exec);
 
-SumkaReflItem *sumka_refl_make_fn(SumkaRefl *refl, char *name, size_t addr);
+ElkaReflItem *elka_refl_make_fn(SumkaRefl *refl, char *name, size_t addr);
 
-SumkaReflItem *sumka_refl_make_var(SumkaRefl *refl, char *name, SumkaReflItem *type);
+ElkaReflItem *elka_refl_make_var(SumkaRefl *refl, char *name, SumkaReflItem *type);
 
 /// @brief Returns a dummy reflection item that simulates a value/instance
-SumkaReflItem sumka_refl_make_dummy(SumkaReflItem *type, SumkaReflItemKind kind);
+ElkaReflItem elka_refl_make_dummy(SumkaReflItem *type, SumkaReflItemKind kind);
 
 /// @returns if `value` is an instance of type `type`
-bool sumka_refl_instanceof(SumkaReflItem *value, SumkaReflItem *type);
+bool elka_refl_instanceof(ElkaReflItem *value, SumkaReflItem *type);
 
 /// @brief Debug tracing function 
-void sumka_refl_trace(SumkaRefl *refl);
+void elka_refl_trace(ElkaRefl *refl);
 
-SumkaReflItem *sumka_refl_find(SumkaRefl *refl, const char *name);
+ElkaReflItem *elka_refl_find(SumkaRefl *refl, const char *name);
 
-void sumka_refl_add_param(SumkaReflItem *item, SumkaReflItem *other);
+void elka_refl_add_param(ElkaReflItem *item, SumkaReflItem *other);
 
 /// @brief This will look up reflection item on the stack, this is the
 ///        recommended function to use when you want to look something up
-SumkaReflItem *sumka_refl_lup(SumkaRefl *refl, const char *name);
+ElkaReflItem *elka_refl_lup(SumkaRefl *refl, const char *name);
 
 /// @brief This does the same as the function above, but instead returns an index
 ///        For the reflection item, this is probably [temporary]
 ///        NOTE: This returns an index into the REFLECTION STACK!!
-int sumka_refl_lup_id(SumkaRefl *refl, const char *name);
+int elka_refl_lup_id(ElkaRefl *refl, const char *name);
 
-size_t sumka_refl_peek(SumkaRefl *refl);
+size_t elka_refl_peek(ElkaRefl *refl);
 
-void sumka_refl_seek(SumkaRefl *refl, size_t n);
+void elka_refl_seek(ElkaRefl *refl, size_t n);
 
-void sumka_refl_push(SumkaRefl *refl, SumkaReflItem *item);
+void elka_refl_push(ElkaRefl *refl, SumkaReflItem *item);
 
-void sumka_refl_dispose(SumkaRefl *refl);
+void elka_refl_dispose(ElkaRefl *refl);
 
 // @returns A new reflection with basetypes initialized
-SumkaRefl sumka_refl_new();
+ElkaRefl elka_refl_new();
 
-#endif // SUMKA_REFL_H__
+#endif // ELKA_REFL_H__

@@ -2,16 +2,16 @@
 #include "codegen.h"
 #include <stdlib.h>
 
-#define SUMKA_STACK_SIZE (1 << 14)
+#define ELKA_STACK_SIZE (1 << 14)
 
-SumkaMem sumka_mem_init() {
-    SumkaMem memory = {
-        .stack = malloc(SUMKA_STACK_SIZE*sizeof(size_t)),
+ElkaMem elka_mem_init() {
+    ElkaMem memory = {
+        .stack = malloc(ELKA_STACK_SIZE*sizeof(size_t)),
         .stack_trail = 0
     };
     return memory;
 }
 
-void sumka_mem_deinit(SumkaMem *mem) {
+void elka_mem_deinit(ElkaMem *mem) {
     free(mem->stack);
 }
