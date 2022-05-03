@@ -1,6 +1,5 @@
 #include "runtime.h"
 #include "codegen.h"
-#include "gc.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -51,7 +50,7 @@ char* elka_runtime_pop_str(ElkaRuntime *rt) {
     return (char*)elka_mem_pop_default_int(&rt->mem);
 }
 
-elka_default_int_td sumka_runtime_pop_int(ElkaRuntime *rt) {
+elka_default_int_td elka_runtime_pop_int(ElkaRuntime *rt) {
     return elka_mem_pop_default_int(&rt->mem);
 }
 
@@ -128,7 +127,7 @@ void elka_runtime_exec(ElkaRuntime *rt) {
                 rt->rip += 1;
             } break;
             case ELKA_INSTR_BASED_IUC: {
-                elka_default_int_td offs = sumka_mem_pop_default_int(&rt->mem);
+                elka_default_int_td offs = elka_mem_pop_default_int(&rt->mem);
                 size_t trail = rt->callstack[rt->rsp-1].stack_at;
                 size_t base = trail + (instr >> 6);
                 elka_mem_push_default_int(&rt->mem, rt->mem.stack[base+offs]);
@@ -140,23 +139,23 @@ void elka_runtime_exec(ElkaRuntime *rt) {
             } break;
             case ELKA_INSTR_PUSH_SC: {
                 char *s = lup_sc(rt, instr);
-                elka_mem_push_default_int(&rt->mem, (sumka_default_int_td)s);
+                elka_mem_push_default_int(&rt->mem, (elka_default_int_td)s);
                 rt->rip += 1;  
             } break;
             case ELKA_INSTR_PUSH_IC: {
                 elka_default_int_td val = lup_ic(rt, instr);
-                elka_mem_push_default_int(&rt->mem, (sumka_default_int_td)val);
+                elka_mem_push_default_int(&rt->mem, (elka_default_int_td)val);
                 rt->rip += 1;  
             } break;
             case ELKA_INSTR_CLR: {
-                elka_default_int_td val = sumka_mem_pop_default_int(&rt->mem);
+                elka_default_int_td val = elka_mem_pop_default_int(&rt->mem);
                 rt->mem.stack_trail = rt->callstack[rt->rsp-1].stack_at;
                 elka_mem_push_default_int(&rt->mem, val);
 
                 rt->rip += 1;
             } break;
             case ELKA_INSTR_JIF_IUC: {
-                elka_default_int_td val = sumka_mem_pop_default_int(&rt->mem);
+                elka_default_int_td val = elka_mem_pop_default_int(&rt->mem);
                 rt->rip += (!val)*((instr >> 6) - 1)+1;
                 /*
                 if (val) 
@@ -166,7 +165,7 @@ void elka_runtime_exec(ElkaRuntime *rt) {
                     */
             } break;
             case ELKA_INSTR_GIF_IUC: {
-                elka_default_int_td val = sumka_mem_pop_default_int(&rt->mem);
+                elka_default_int_td val = elka_mem_pop_default_int(&rt->mem);
                 rt->rip -= (!!val)*((instr >> 6) + 1)-1;
                 /*
                 if (val) 

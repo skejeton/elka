@@ -15,12 +15,12 @@ typedef struct ElkaMem {
 ElkaMem elka_mem_init();
 
 __attribute__((unused))
-static void elka_mem_push_default_int(ElkaMem *mem, sumka_default_int_td value) {
+static void elka_mem_push_default_int(ElkaMem *mem, elka_default_int_td value) {
     mem->stack[mem->stack_trail++] = value;
 }
 
 __attribute__((unused))
-static elka_default_int_td sumka_mem_pop_default_int(ElkaMem *mem) {
+static elka_default_int_td elka_mem_pop_default_int(ElkaMem *mem) {
     return mem->stack[--mem->stack_trail];
 }
 

@@ -7,19 +7,27 @@
 
 
 typedef enum ElkaNodeType {
+	ELKA_NT_GENERIC, // in cases a new type doesn't make sense
+	ELKA_NT_FN_DECL,
+	ELKA_NT_FN_PROTOTYPE,
+	ELKA_NT_EXPORT_SYMBOL,
+	ELKA_NT_IDENT,
+	ELKA_NT_TYPE,
+	ELKA_NT_ARG_LIST,
+	ELKA_NT_ARG_LIST_PART,
 } ElkaNodeType;
 
 
 typedef struct ElkaNode {
-	NodeType type;
-	Token token;
-	struct Node *first_child;
-	struct Node *sibling;
+	ElkaNodeType type;
+	ElkaToken token;
+	struct ElkaNode *first_child;
+	struct ElkaNode *sibling;
 } ElkaNode;
 
 
 typedef struct ElkaAst {
-	Node *nodes;
+	ElkaNode *nodes;
 	size_t node_count;
 } ElkaAst;
 
@@ -48,6 +56,6 @@ void elka_ast_deinit(ElkaAst* ast);
 void elka_node_pretty_print(ElkaNode *node, int indent);
 
 // Pretty prints the ast
-void elka_ast_pretty_print(ElkaAst *ast);
+void elka_ast_pretty_print(ElkaLexer *l, ElkaAst *ast);
 
 #endif // AST_H

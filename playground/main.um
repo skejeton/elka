@@ -1,15 +1,1 @@
-fn test(arr: int, n: int) {
-    id := 0
-    for less(id, n) {
-        printi(arr[n]) print("  ")
-        id = plus(id, 1)
-    }
-}
-
-fn main() {
-    x := [3]int{ 1, 2, 3 }
-    test(x, 3)
-}
-
-
-
+fn test(a, b, c: int, name: str)

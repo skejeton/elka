@@ -22,7 +22,7 @@ void print(ElkaRuntime *rt) {
 }
 
 void printi(ElkaRuntime *rt) {
-    printf("%zi", elka_runtime_pop_int(rt)); 
+    //printf("%i", elka_runtime_pop_int(rt)); 
 }
 
 void println(ElkaRuntime *rt) {

@@ -4,7 +4,7 @@
 #include <string.h>
 #include <assert.h>
 
-void elka_codegen_instr_ic(ElkaCodegen *cg, SumkaInstruction instr, sumka_default_int_td icarg) {
+void elka_codegen_instr_ic(ElkaCodegen *cg, ElkaInstruction instr, elka_default_int_td icarg) {
     memcpy(cg->lut + cg->lut_trail, &icarg, sizeof(icarg));   
     cg->lut_indices[cg->lut_index_count] = cg->lut_trail;
     cg->lut_trail += sizeof(icarg);
@@ -14,7 +14,7 @@ void elka_codegen_instr_ic(ElkaCodegen *cg, SumkaInstruction instr, sumka_defaul
     *out = instr | (index << 6);
 }
 
-void elka_codegen_instr_sc(ElkaCodegen *cg, SumkaInstruction instr, char *scarg) {
+void elka_codegen_instr_sc(ElkaCodegen *cg, ElkaInstruction instr, char *scarg) {
     // Write to LUT
     size_t len = strlen(scarg)+1;
     memcpy(cg->lut + cg->lut_trail, scarg, len);
@@ -37,13 +37,13 @@ void elka_codegen_leave(ElkaCodegen *cg, size_t genesis) {
     cg->instrs[genesis] |= (cg->instr_count-genesis) << 6;
 }
 
-void elka_codegen_instr_iuc(ElkaCodegen *cg, SumkaInstruction instr, size_t iuc) {
+void elka_codegen_instr_iuc(ElkaCodegen *cg, ElkaInstruction instr, size_t iuc) {
     // Emit instruction
     uint32_t *out = &cg->instrs[cg->instr_count++];
     *out = instr | (iuc << 6);
 }
 
-void elka_codegen_instr(ElkaCodegen *cg, SumkaInstruction instr) {
+void elka_codegen_instr(ElkaCodegen *cg, ElkaInstruction instr) {
     uint32_t *out = &cg->instrs[cg->instr_count++];
     *out = instr;
 }

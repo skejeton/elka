@@ -72,22 +72,22 @@ typedef struct ElkaCodegen {
     size_t branch_stack_size;
 } ElkaCodegen;
 
-typedef struct ElkaLabel SumkaLabel;
+typedef struct ElkaLabel ElkaLabel;
 
 size_t elka_codegen_branch(ElkaCodegen *cg);
 
 void elka_codegen_leave(ElkaCodegen *cg, size_t genesis);
 
 // Puts SC-Addressed instruction into the instruction list
-void elka_codegen_instr_sc(ElkaCodegen *cg, SumkaInstruction instr, char *scarg);
+void elka_codegen_instr_sc(ElkaCodegen *cg, ElkaInstruction instr, char *scarg);
 
 // Puts IC-Addressed instruction into the instruction list
-void elka_codegen_instr_ic(ElkaCodegen *cg, SumkaInstruction instr, sumka_default_int_td icarg);
+void elka_codegen_instr_ic(ElkaCodegen *cg, ElkaInstruction instr, elka_default_int_td icarg);
 // Puts IUC-Addressed instruction into the instruction list
-void elka_codegen_instr_iuc(ElkaCodegen *cg, SumkaInstruction instr, size_t iuc);
+void elka_codegen_instr_iuc(ElkaCodegen *cg, ElkaInstruction instr, size_t iuc);
 
 // Puts simple instruction into the instruction list
-void elka_codegen_instr(ElkaCodegen *cg, SumkaInstruction instr);
+void elka_codegen_instr(ElkaCodegen *cg, ElkaInstruction instr);
 
 // Debug dump for a singular instruction
 void elka_codegen_dump_instr(ElkaCodegen *cg, uint32_t instr);

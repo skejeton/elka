@@ -1,14 +1,17 @@
+TARGET=elka
+WARNS=-Wall
+
 all:
-	clang -lc *.c -o sumka -Wextra -Wall -Werror -pedantic -g -fsanitize=address
-	./sumka
+	$(CC) -lc *.c -o $(TARGET) $(WARNS) -g -fsanitize=address
+	./$(TARGET)
 cachegrind:
-	clang -lc *.c -o sumka -Wextra -Wall -Werror -pedantic -g
-	valgrind --tool=cachegrind ./sumka
+	$(CC) -lc *.c -o $(TARGET) $(WARNS) -g
+	valgrind --tool=cachegrind ./$(TARGET)
 	kcachegrind cachegrind.out.*
 	rm cachegrind.out.*
 smol:
-	clang -lc *.c -o sumka -Wextra -Wall -Werror -pedantic -O2
-	strip sumka
-	upx -9 sumka
+	$(CC) -lc *.c -o $(TARGET) -Wextra -Wall -Werror -pedantic -O2
+	strip $(TARGET)
+	upx -9 $(TARGET)
 fast:
-	clang -lc bundle/bundle.c -o sumka -Wextra -Wall -Werror -pedantic -O3 -flto
+	clang -lc bundle/bundle.c -o $(TARGET) -Wextra -Wall -Werror -pedantic -O3 -flto

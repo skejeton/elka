@@ -9,7 +9,7 @@
 #include <stdbool.h>
 
 struct ElkaRuntime;
-typedef void (*ElkaFFIExec)(struct SumkaRuntime *runtime);
+typedef void (*ElkaFFIExec)(struct ElkaRuntime *runtime);
 
 typedef enum ElkaReflItemKind {
     ELKA_TAG_FFIFUN,
@@ -53,32 +53,32 @@ typedef struct ElkaRefl {
 } ElkaRefl;
 
 /// @returns Refection item of a base type
-const ElkaReflItem *elka_basetype(SumkaReflItemKind kind);
+const ElkaReflItem *elka_basetype(ElkaReflItemKind kind);
 
 // NOTE: This implicitly adds the FFI function onto the reflection stack
 //       For convenience
-void elka_refl_register_ffi_fn(ElkaRefl *refl, char *name, SumkaFFIExec exec);
+void elka_refl_register_ffi_fn(ElkaRefl *refl, char *name, ElkaFFIExec exec);
 
-ElkaReflItem *elka_refl_make_fn(SumkaRefl *refl, char *name, size_t addr);
+ElkaReflItem *elka_refl_make_fn(ElkaRefl *refl, char *name, size_t addr);
 
-ElkaReflItem *elka_refl_make_var(SumkaRefl *refl, char *name, SumkaReflItem *type);
+ElkaReflItem *elka_refl_make_var(ElkaRefl *refl, char *name, ElkaReflItem *type);
 
 /// @brief Returns a dummy reflection item that simulates a value/instance
-ElkaReflItem elka_refl_make_dummy(SumkaReflItem *type, SumkaReflItemKind kind);
+ElkaReflItem elka_refl_make_dummy(ElkaReflItem *type, ElkaReflItemKind kind);
 
 /// @returns if `value` is an instance of type `type`
-bool elka_refl_instanceof(ElkaReflItem *value, SumkaReflItem *type);
+bool elka_refl_instanceof(ElkaReflItem *value, ElkaReflItem *type);
 
 /// @brief Debug tracing function 
 void elka_refl_trace(ElkaRefl *refl);
 
-ElkaReflItem *elka_refl_find(SumkaRefl *refl, const char *name);
+ElkaReflItem *elka_refl_find(ElkaRefl *refl, const char *name);
 
-void elka_refl_add_param(ElkaReflItem *item, SumkaReflItem *other);
+void elka_refl_add_param(ElkaReflItem *item, ElkaReflItem *other);
 
 /// @brief This will look up reflection item on the stack, this is the
 ///        recommended function to use when you want to look something up
-ElkaReflItem *elka_refl_lup(SumkaRefl *refl, const char *name);
+ElkaReflItem *elka_refl_lup(ElkaRefl *refl, const char *name);
 
 /// @brief This does the same as the function above, but instead returns an index
 ///        For the reflection item, this is probably [temporary]
@@ -89,7 +89,7 @@ size_t elka_refl_peek(ElkaRefl *refl);
 
 void elka_refl_seek(ElkaRefl *refl, size_t n);
 
-void elka_refl_push(ElkaRefl *refl, SumkaReflItem *item);
+void elka_refl_push(ElkaRefl *refl, ElkaReflItem *item);
 
 void elka_refl_dispose(ElkaRefl *refl);
 

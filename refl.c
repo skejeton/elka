@@ -8,13 +8,13 @@ struct {
     const char *name;
     ElkaBasetype basetype;
 } BASETYPE_REFL[] = {
-    [ELKA_TYPE_VOID] = { "void", SUMKA_TYPE_VOID },
-    [ELKA_TYPE_INT]  = { "int", SUMKA_TYPE_INT },
-    [ELKA_TYPE_STR]  = { "str", SUMKA_TYPE_STR },
+    [ELKA_TYPE_VOID] = { "void", ELKA_TYPE_VOID },
+    [ELKA_TYPE_INT]  = { "int", ELKA_TYPE_INT },
+    [ELKA_TYPE_STR]  = { "str", ELKA_TYPE_STR },
 };
 
 static
-ElkaReflItem generic_item(const char *name, SumkaReflItemKind tag) {
+ElkaReflItem generic_item(const char *name, ElkaReflItemKind tag) {
     return (ElkaReflItem) {
         // FIXME: Remove strdup here
         // NOTE: If we recieve an empty string we don't strdup it, this is for dummy maker thingey
@@ -24,7 +24,7 @@ ElkaReflItem generic_item(const char *name, SumkaReflItemKind tag) {
     };   
 }
 
-void elka_refl_register_ffi_fn(ElkaRefl *refl, char *name, SumkaFFIExec exec) {
+void elka_refl_register_ffi_fn(ElkaRefl *refl, char *name, ElkaFFIExec exec) {
     ElkaReflItem *item = &refl->refls[refl->refl_count++];
 
     *item = generic_item(name, ELKA_TAG_FFIFUN);
@@ -33,13 +33,13 @@ void elka_refl_register_ffi_fn(ElkaRefl *refl, char *name, SumkaFFIExec exec) {
     elka_refl_push(refl, item);
 }
 
-ElkaReflItem elka_refl_make_dummy(SumkaReflItem *type, SumkaReflItemKind kind) {
+ElkaReflItem elka_refl_make_dummy(ElkaReflItem *type, ElkaReflItemKind kind) {
     ElkaReflItem item = generic_item("", kind);
     item.type = type;
     return item;
 }
 
-ElkaReflItem *elka_refl_make_fn(SumkaRefl *refl, char *name, size_t addr) {
+ElkaReflItem *elka_refl_make_fn(ElkaRefl *refl, char *name, size_t addr) {
     ElkaReflItem *item = &refl->refls[refl->refl_count++];
 
     *item = generic_item(name, ELKA_TAG_FUN);
@@ -48,7 +48,7 @@ ElkaReflItem *elka_refl_make_fn(SumkaRefl *refl, char *name, size_t addr) {
     return item;
 }
 
-ElkaReflItem *mkbasetype(SumkaRefl *refl, const char *name, SumkaBasetype basetype) {
+ElkaReflItem *mkbasetype(ElkaRefl *refl, const char *name, ElkaBasetype basetype) {
     ElkaReflItem *item = &refl->refls[refl->refl_count++];
     *item = generic_item(name, ELKA_TAG_BASETYPE);
     item->basetype = basetype;
@@ -68,7 +68,7 @@ ElkaRefl elka_refl_new() {
     return result;
 }
 
-ElkaReflItem *elka_refl_find(SumkaRefl *refl, const char *name) {
+ElkaReflItem *elka_refl_find(ElkaRefl *refl, const char *name) {
     for (size_t i = 0; i < refl->refl_count; i += 1) {
         if (strcmp(refl->refls[i].name, name) == 0)
             return &refl->refls[i];
@@ -84,20 +84,20 @@ int elka_refl_lup_id(ElkaRefl *refl, const char *name) {
     return -1;
 }
 
-ElkaReflItem *elka_refl_lup(SumkaRefl *refl, const char *name) {
+ElkaReflItem *elka_refl_lup(ElkaRefl *refl, const char *name) {
     int id = elka_refl_lup_id(refl, name);
     return id == -1 ? NULL : refl->stack[id];
 }
 
 
-bool elka_refl_instanceof(ElkaReflItem *a, SumkaReflItem *b) {
+bool elka_refl_instanceof(ElkaReflItem *a, ElkaReflItem *b) {
     assert(a != NULL);
     // Note: This only works for now as we don't have type aliases
     // When this will be added we can't just check pointers
     return a->type == b;
 }
 
-ElkaReflItem *elka_refl_make_var(SumkaRefl *refl, char *name, SumkaReflItem *type) {
+ElkaReflItem *elka_refl_make_var(ElkaRefl *refl, char *name, ElkaReflItem *type) {
     ElkaReflItem *item = &refl->refls[refl->refl_count++];
     *item = generic_item(name, ELKA_TAG_VALUE);
     item->type = type;
@@ -122,7 +122,7 @@ void elka_refl_trace(ElkaRefl *refl) {
     }
 }
 
-void elka_refl_add_param(ElkaReflItem *item, SumkaReflItem *other) {
+void elka_refl_add_param(ElkaReflItem *item, ElkaReflItem *other) {
 
     assert(item->tag == ELKA_TAG_FUN && "Can't add parameter to non function");
 
@@ -148,7 +148,7 @@ void elka_refl_seek(ElkaRefl *refl, size_t n) {
     refl->stack_size = n;
 }
 
-void elka_refl_push(ElkaRefl *refl, SumkaReflItem *item) {
+void elka_refl_push(ElkaRefl *refl, ElkaReflItem *item) {
     refl->stack[refl->stack_size++] = item;
 }
 

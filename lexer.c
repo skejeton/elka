@@ -18,7 +18,7 @@ typedef struct Capture {
 } Capture;
 
 static
-ElkaToken mktok(Capture cap, SumkaTokenType tt) {
+ElkaToken mktok(Capture cap, ElkaTokenType tt) {
     return (ElkaToken) { tt, cap.line, cap.column, cap.start, cap.size };
 }
 
@@ -71,7 +71,7 @@ void lskip(ElkaLexer *lexer) {
 }
 
 static
-ElkaError get_ident(SumkaLexer *lexer, Capture *capture) {
+ElkaError get_ident(ElkaLexer *lexer, Capture *capture) {
     *capture = record(lexer);
     
     /* NOTE: isalnum() fits here because decide() checks for first 
@@ -85,7 +85,7 @@ ElkaError get_ident(SumkaLexer *lexer, Capture *capture) {
 }
 
 static
-ElkaError ident_or_kw(SumkaLexer *lexer, SumkaToken *out) {
+ElkaError ident_or_kw(ElkaLexer *lexer, ElkaToken *out) {
     Capture capture;
     checkout(get_ident(lexer, &capture));
     
@@ -103,7 +103,7 @@ ElkaError ident_or_kw(SumkaLexer *lexer, SumkaToken *out) {
 }
 
 static
-ElkaError simple(SumkaLexer *lexer, SumkaTokenType tt, SumkaToken *token) {
+ElkaError simple(ElkaLexer *lexer, ElkaTokenType tt, ElkaToken *token) {
     *token = (ElkaToken) {
         tt,
         lexer->line_,
@@ -117,7 +117,7 @@ ElkaError simple(SumkaLexer *lexer, SumkaTokenType tt, SumkaToken *token) {
 }
 
 static
-ElkaError string(SumkaLexer *lexer, SumkaToken *token) {
+ElkaError string(ElkaLexer *lexer, ElkaToken *token) {
     Capture capture = record(lexer);
     // Skip the '"'
     lskip(lexer);
@@ -131,7 +131,7 @@ ElkaError string(SumkaLexer *lexer, SumkaToken *token) {
 }
 
 static
-ElkaError number(SumkaLexer *lexer, SumkaToken *out) {
+ElkaError number(ElkaLexer *lexer, ElkaToken *out) {
     Capture capture = record(lexer);
     if (lpeek(lexer) == '-')
         lskip(lexer);
@@ -143,7 +143,7 @@ ElkaError number(SumkaLexer *lexer, SumkaToken *out) {
 }
 
 static
-ElkaError decide(SumkaLexer *lexer, SumkaToken *out) {
+ElkaError decide(ElkaLexer *lexer, ElkaToken *out) {
     char chara = lpeek(lexer);
     
     if (isalpha(chara))
@@ -164,6 +164,8 @@ ElkaError decide(SumkaLexer *lexer, SumkaToken *out) {
         return simple(lexer, ELKA_TT_LBRACKET, out);
     if (lis(lexer, ']'))
         return simple(lexer, ELKA_TT_RBRACKET, out);
+    if (lis(lexer, '*'))
+        return simple(lexer, ELKA_TT_ASTERISK, out);
     if (lis(lexer, '='))
         return simple(lexer, ELKA_TT_ASSIGN, out);
     if (lpeek(lexer) == '-' || (lpeek(lexer) >= '0' && lpeek(lexer) <= '9'))
@@ -215,21 +217,21 @@ void skip_blank(ElkaLexer *lexer) {
     }
 }
 
-ElkaError elka_lex_next(SumkaLexer *lexer, SumkaToken *out) {
+ElkaError elka_lex_next(ElkaLexer *lexer, ElkaToken *out) {
     skip_blank(lexer);
     if (lpeek(lexer) == 0)
         return ELKA_ERR_EOF;
     return decide(lexer, out);
 }
 
-void elka_token_dbgdmp(ElkaLexer *lexer, SumkaToken *token) {
+void elka_token_dbgdmp(ElkaLexer *lexer, ElkaToken *token) {
     printf("tok (%d) '%.*s' %d:%d\n", 
         token->type,
         (int)token->size, lexer->source+token->start,
         token->line, token->column); 
 }
 
-void elka_token_valdmp(ElkaLexer *lexer, SumkaToken *token) {
+void elka_token_valdmp(ElkaLexer *lexer, ElkaToken *token) {
     printf("%.*s", 
         (int)token->size, lexer->source+token->start);
 }

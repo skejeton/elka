@@ -1,5 +1,6 @@
 #ifndef ELKA_PARSER_H__
 #define ELKA_PARSER_H__
+#include "ast.h"
 #include "lexer.h"
 #include "codegen.h"
 #include <stdbool.h>
@@ -16,17 +17,18 @@ typedef struct ElkaParser {
     ElkaCodegen cg;
     ElkaToken current_;
     char tmpstrbuf_[1024];
+    ElkaAst ast;
     ElkaRefl *refl;
     
     // I should probably move this to reflection
     ElkaReflItem last_item;
     ElkaReflItem *return_type;
     
-    
+ 
     ElkaParserError err;
 } ElkaParser;
 
-ElkaError elka_parser_parse(SumkaParser *parser);
-void elka_parser_print_error(ElkaParser *parser, SumkaError err);
+ElkaError elka_parser_parse(ElkaParser *parser);
+void elka_parser_print_error(ElkaParser *parser, ElkaError err);
 
 #endif
