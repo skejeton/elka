@@ -22,7 +22,8 @@ typedef enum {
     ELKA_TT_FOR,
     ELKA_TT_LBRACKET,
     ELKA_TT_RBRACKET,
-		ELKA_TT_ASTERISK
+		ELKA_TT_ASTERISK,
+		ELKA_TT_EOF
 }
 ElkaTokenType;
 
@@ -51,6 +52,9 @@ typedef struct ElkaLexer {
 
 // Fetches next token
 ElkaError elka_lex_next(ElkaLexer *lexer, ElkaToken *out_token);
+
+// Returns the next token, but doesn't advance the lexer position
+ElkaError elka_lex_peek(ElkaLexer *lexer, ElkaToken *out_token);
 
 // Returns the line of the token (1-indexed)
 int32_t elka_token_line(ElkaToken *token);

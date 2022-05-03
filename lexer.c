@@ -219,9 +219,24 @@ void skip_blank(ElkaLexer *lexer) {
 
 ElkaError elka_lex_next(ElkaLexer *lexer, ElkaToken *out) {
     skip_blank(lexer);
-    if (lpeek(lexer) == 0)
-        return ELKA_ERR_EOF;
+    if (lpeek(lexer) == 0) {
+			out->type = ELKA_TT_EOF;
+			return ELKA_OK;
+		}
     return decide(lexer, out);
+}
+
+ElkaError elka_lex_peek(ElkaLexer *lexer, ElkaToken *out) {
+	int pos = lexer->pos_;
+	int line = lexer->line_;
+	int column = lexer->column_;
+
+	ElkaError err = elka_lex_next(lexer, out);
+	lexer->pos_ = pos;
+	lexer->line_ = line;
+	lexer->column_ = column;
+
+	return err;
 }
 
 void elka_token_dbgdmp(ElkaLexer *lexer, ElkaToken *token) {

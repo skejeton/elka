@@ -66,6 +66,8 @@ int main() {
         return -1;
     }
 
+		return 0;
+
     printf(" == Bytecode == \n");
     elka_codegen_dbgdmp(&parser.cg);
     fflush(stdout);

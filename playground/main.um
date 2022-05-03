@@ -1,1 +1,4 @@
-fn test(a, b, c: int, name: str)
+fn test1()
+fn test2(a, b, c: int, name: str)
+fn test3(name: str): int
+fn test4(x, y: int): (int, int)
