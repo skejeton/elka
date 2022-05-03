@@ -168,6 +168,8 @@ ElkaError decide(ElkaLexer *lexer, ElkaToken *out) {
         return simple(lexer, ELKA_TT_ASTERISK, out);
     if (lis(lexer, '='))
         return simple(lexer, ELKA_TT_ASSIGN, out);
+    if (lis(lexer, '^'))
+        return simple(lexer, ELKA_TT_CARET, out);
     if (lpeek(lexer) == '-' || (lpeek(lexer) >= '0' && lpeek(lexer) <= '9'))
         return number(lexer, out);
     /* FIXME: This isn't a very good way to handle multicharacter seq's

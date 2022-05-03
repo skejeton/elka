@@ -23,7 +23,8 @@ typedef enum {
     ELKA_TT_LBRACKET,
     ELKA_TT_RBRACKET,
 		ELKA_TT_ASTERISK,
-		ELKA_TT_EOF
+		ELKA_TT_CARET,
+		ELKA_TT_EOF,
 }
 ElkaTokenType;
 

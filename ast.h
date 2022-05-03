@@ -16,6 +16,8 @@ typedef enum ElkaNodeType {
 	ELKA_NT_ARG_LIST,
 	ELKA_NT_ARG_LIST_PART,
 	ELKA_NT_TYPE_LIST,
+	ELKA_NT_POINTER,
+	ELKA_NT_DYNARR,
 } ElkaNodeType;
 
 

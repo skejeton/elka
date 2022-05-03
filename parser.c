@@ -44,7 +44,25 @@ ElkaError par_rcv_signature(ElkaParser *p, ElkaNode *node) {
 // type <- [typeMod][ident"."]ident
 static
 ElkaError par_type(ElkaParser *p, ElkaNode *node) {
-	// TODO
+	for (int loop=1; loop;) {
+		switch (p->current_.type) {
+		case ELKA_TT_CARET: // pointer
+			elka_node_set(node, elka_node_from(ELKA_NT_POINTER, p->current_));
+			node = node->first_child = elka_ast_make(&p->ast, node);
+			checkout(next(p));
+			break;
+		case ELKA_TT_LBRACKET: // array. TODO static arrays
+			elka_node_set(node, elka_node_from(ELKA_NT_DYNARR, p->current_));
+			node = node->first_child = elka_ast_make(&p->ast, node);
+			checkout(expect(p, ELKA_TT_RBRACKET));
+			checkout(next(p));
+			break;
+		case ELKA_TT_IDENT: loop = 0; break;
+		default:
+			checkout(ELKA_ERR_INVALID_TOKEN);
+		}
+	}
+
 	elka_node_set(node, elka_node_from(ELKA_NT_TYPE, p->current_));
 
 	return ELKA_OK;
