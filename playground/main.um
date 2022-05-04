@@ -1,4 +1,4 @@
 fn len(arr: ^[]int): int {
-	b := (1 + 2)
-	a := (c + x) * 4 * 4
+	a := (rand() + x) * 4 * 4
+	printi(1, 2)
 }

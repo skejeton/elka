@@ -194,7 +194,6 @@ ElkaError par_factor(ElkaParser *p, ElkaNode *node) {
 
 		break;
 	default:
-		elka_token_dbgdmp(p->lexer, &p->current_);
 		checkout(ELKA_ERR_INVALID_TOKEN);
 	}
 
@@ -328,7 +327,19 @@ ElkaError par_assign(ElkaParser *p, ElkaNode *node) {
 }
 
 ElkaError par_funcall(ElkaParser *p, ElkaNode *node) {
-	//TODO
+	elka_node_set(node, elka_node_from(ELKA_NT_FUNCALL, p->current_));
+	checkout(expect(p, ELKA_TT_LPAREN));
+
+	checkout(next(p));
+	while (p->current_.type != ELKA_TT_RPAREN) {
+		checkout(par_expr(p, elka_ast_make(&p->ast, node)));
+		checkout(next(p));
+		if (p->current_.type == ELKA_TT_COMMA)
+			checkout(next(p));
+		else if (p->current_.type != ELKA_TT_RPAREN)
+			return ELKA_ERR_INVALID_TOKEN;
+	}
+
 	return ELKA_OK;
 }
 

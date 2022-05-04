@@ -24,6 +24,7 @@ typedef enum ElkaNodeType {
 	ELKA_NT_VAR_DECL,
 	ELKA_NT_NUMBER,
 	ELKA_NT_STRING,
+	ELKA_NT_FUNCALL,
 } ElkaNodeType;
 
 
