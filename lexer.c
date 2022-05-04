@@ -166,10 +166,87 @@ ElkaError decide(ElkaLexer *lexer, ElkaToken *out) {
         return simple(lexer, ELKA_TT_RBRACKET, out);
     if (lis(lexer, '*'))
         return simple(lexer, ELKA_TT_ASTERISK, out);
-    if (lis(lexer, '='))
-        return simple(lexer, ELKA_TT_ASSIGN, out);
+    if (lis(lexer, '~'))
+        return simple(lexer, ELKA_TT_OP_BITNOT, out);
+    if (lis(lexer, '+'))
+        return simple(lexer, ELKA_TT_OP_PLUS, out);
+    if (lis(lexer, '-'))
+        return simple(lexer, ELKA_TT_OP_MINUS, out);
+    if (lis(lexer, '=')) {
+    	simple(lexer, ELKA_TT_ASSIGN, out);
+			if (lis(lexer, '=')) {
+				out->type = ELKA_TT_OP_EQUAL;
+				out->size++;
+				lskip(lexer);
+			}
+			return ELKA_OK;
+		}
+
+    if (lis(lexer, '!')) {
+    	simple(lexer, ELKA_TT_OP_NOT, out);
+			if (lis(lexer, '=')) {
+				out->type = ELKA_TT_OP_NOT_EQUAL;
+				out->size++;
+				lskip(lexer);
+			}
+			return ELKA_OK;
+		}
+
+    if (lis(lexer, '|')) {
+    	simple(lexer, ELKA_TT_OP_BITOR, out);
+			if (lis(lexer, '|')) {
+				out->type = ELKA_TT_OP_OR;
+				out->size++;
+				lskip(lexer);
+			}
+			return ELKA_OK;
+		}
+
+    if (lis(lexer, '&')) {
+    	simple(lexer, ELKA_TT_OP_BITAND, out);
+			if (lis(lexer, '&')) {
+				out->type = ELKA_TT_OP_AND;
+				out->size++;
+				lskip(lexer);
+			}
+			return ELKA_OK;
+		}
+
     if (lis(lexer, '^'))
         return simple(lexer, ELKA_TT_CARET, out);
+    if (lis(lexer, '/'))
+        return simple(lexer, ELKA_TT_SLASH, out);
+    if (lis(lexer, '%'))
+        return simple(lexer, ELKA_TT_OP_MODULO, out);
+	
+		if (lis(lexer, '<')) {
+			simple(lexer, ELKA_TT_OP_LESSER, out);
+			if (lis(lexer, '<')) {
+				out->type = ELKA_TT_OP_SHIFTL;
+				out->size = 2;
+				lskip(lexer);
+			} else if (lis(lexer, '=')) {
+				out->type = ELKA_TT_OP_LESSER_EQUAL;
+				out->size = 2;
+				lskip(lexer);
+			}
+			return ELKA_OK;
+		}
+
+		if (lis(lexer, '>')) {
+			simple(lexer, ELKA_TT_OP_GREATER, out);
+			if (lis(lexer, '>')) {
+				out->type = ELKA_TT_OP_SHIFTR;
+				out->size = 2;
+				lskip(lexer);
+			} else if (lis(lexer, '=')) {
+				out->type = ELKA_TT_OP_GREATER_EQUAL;
+				out->size = 2;
+				lskip(lexer);
+			}
+			return ELKA_OK;
+		}
+
     if (lpeek(lexer) == '-' || (lpeek(lexer) >= '0' && lpeek(lexer) <= '9'))
         return number(lexer, out);
     /* FIXME: This isn't a very good way to handle multicharacter seq's

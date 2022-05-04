@@ -84,7 +84,9 @@ void node_pretty_print(ElkaLexer *l, ElkaNode *node, int indent) {
 	const char *types[] = {"ident", "fn", "colon", "left paren", "right paren",
 		"left brace", "right brace", "string", "number", "defn", "comma",
 		"return", "if", "assign", "for", "left bracket", "right bracket",
-		"asterisk", "caret", "EOF"};
+		"asterisk", "caret", "slash", "modulo", "shiftl", "shiftr", "equal",
+		"not-equal", "lesser", "lesser-equal", "greater", "greater-equal",
+		"and", "or", "plus", "minus", "not", "bit-not", "bit-and", "bit-or", "EOF"};
 
 	printf("%s: \x1b[37m", types[node->token.type]);
 	

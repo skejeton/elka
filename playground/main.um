@@ -1,1 +1,4 @@
-fn len(arr: ^[]int): int
+fn len(arr: ^[]int): int {
+	b := (1 + 2)
+	a := (c + x) * 4 * 4
+}
